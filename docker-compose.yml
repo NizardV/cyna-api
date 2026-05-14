@@ -1,0 +1,12 @@
+services:
+  CynaApiapi:
+    image: CynaApiapi
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    container_name: CynaApi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    ports:
+      - "6400:8080"
+      - "6401:8081"
