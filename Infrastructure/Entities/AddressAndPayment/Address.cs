@@ -19,15 +19,3 @@ public class Address
     public User User { get; set; } = null!;
     public ICollection<Order> Orders { get; set; } = [];
 }
-
-public class PaymentMethod
-{
-    public int Id { get; set; }
-    public int UserId { get; set; }
-    public string StripePaymentMethodId { get; set; } = string.Empty;
-    public string? CardBrand { get; set; }
-    public string CardLast4 { get; set; } = string.Empty;
-    public bool IsDefault { get; set; } = false;
-
-    public User User { get; set; } = null!;
-}
