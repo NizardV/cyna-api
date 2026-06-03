@@ -33,7 +33,7 @@ stages:
       inputs:
         SonarCloud: 'SonarCloud-CYNA'
         organization: '$(sonarOrganization)'
-        scannerMode: 'MSBuild'
+        scannerMode: 'dotnet'
         projectKey: '$(sonarProjectKeyBackend)'
         projectName: 'CYNA - Backend API'
         extraProperties: |
