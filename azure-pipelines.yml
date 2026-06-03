@@ -28,7 +28,7 @@ stages:
         jdkHomeDirectory: '$(Agent.ToolsDirectory)/JavaToolInstaller/jdk-17'
         jdkArchitecture: 'x64'
 
-    - task: SonarCloudPrepare@2
+    - task: SonarCloudPrepare@3
       displayName: 'Prepare SonarCloud'
       inputs:
         SonarCloud: 'SonarCloud-CYNA'
@@ -49,8 +49,8 @@ stages:
         dotnet test --no-build --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=$(Agent.TempDirectory)/coverage.opencover.xml
       displayName: 'Tests & Coverage'
 
-    - task: SonarCloudAnalyze@2
+    - task: SonarCloudAnalyze@3
       displayName: 'Run SonarCloud Analysis'
 
-    - task: SonarCloudPublish@2
+    - task: SonarCloudPublish@3
       displayName: 'Publish Quality Gate'
