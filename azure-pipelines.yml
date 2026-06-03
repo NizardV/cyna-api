@@ -20,13 +20,13 @@ stages:
       inputs:
         version: '8.x'
 
-    - task: JavaToolInstaller@0
-      displayName: 'Install Java 17'
+    - task: bash@3
+      displayName: 'Set Java 17 Environment Variable'
       inputs:
-        versionSource: 'web'
-        jdkSource: 'github'
-        jdkHomeDirectory: '$(Agent.ToolsDirectory)/JavaToolInstaller/jdk-17'
-        jdkArchitecture: 'x64'
+        targetType: 'inline'
+        script: |
+          echo "##vso[task.setvariable variable=JAVA_HOME]$JAVA_HOME_17_X64"
+          echo "##vso[task.setvariable variable=PATH]$JAVA_HOME_17_X64/bin:$PATH"
 
     - task: SonarCloudPrepare@3
       displayName: 'Prepare SonarCloud'
