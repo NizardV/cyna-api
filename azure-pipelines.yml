@@ -1,0 +1,56 @@
+trigger:
+  branches:
+    include: [ "main", "dev" ]
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  sonarOrganization: '2028di1p5g3'
+  sonarProjectKeyBackend: '2028DI1P5G3_Cyna-Api'
+
+stages:
+- stage: CI_Backend
+  displayName: 'CI API Build & SonarCloud'
+  jobs:
+  - job: Build_Backend
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET SDK'
+      inputs:
+        version: '8.x'
+
+    - task: JavaToolInstaller@0
+      displayName: 'Install Java 17'
+      inputs:
+        versionSource: 'web'
+        jdkSource: 'github'
+        jdkHomeDirectory: '$(Agent.ToolsDirectory)/JavaToolInstaller/jdk-17'
+        jdkArchitecture: 'x64'
+
+    - task: SonarCloudPrepare@2
+      displayName: 'Prepare SonarCloud'
+      inputs:
+        SonarCloud: 'SonarCloud-CYNA'
+        organization: '$(sonarOrganization)'
+        scannerMode: 'MSBuild'
+        projectKey: '$(sonarProjectKeyBackend)'
+        projectName: 'CYNA - Backend API'
+        extraProperties: |
+          sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+
+    - script: dotnet restore
+      displayName: 'Restore Packages'
+
+    - script: dotnet build --no-restore --configuration Release
+      displayName: 'Build API'
+
+    - script: |
+        dotnet test --no-build --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=$(Agent.TempDirectory)/coverage.opencover.xml
+      displayName: 'Tests & Coverage'
+
+    - task: SonarCloudAnalyze@2
+      displayName: 'Run SonarCloud Analysis'
+
+    - task: SonarCloudPublish@2
+      displayName: 'Publish Quality Gate'
