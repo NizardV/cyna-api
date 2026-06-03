@@ -7,7 +7,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public string Role { get; set; } = "user"; // user | admin | super_admin
+    public UserRole Role { get; set; } = UserRole.User;
     public bool IsEmailVerified { get; set; } = false;
     public string? TwoFactorSecret { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

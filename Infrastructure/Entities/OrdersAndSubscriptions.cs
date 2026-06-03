@@ -20,7 +20,7 @@ public class Subscription
     public int ProductId { get; set; }
     public int PricingPlanId { get; set; }
     public string? StripeSubscriptionId { get; set; }
-    public string Status { get; set; } = "pending"; // active | cancelled | expired | suspended | pending
+    public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
     public DateTime CurrentPeriodStart { get; set; }
     public DateTime CurrentPeriodEnd { get; set; }
     public bool AutoRenew { get; set; } = true;
@@ -37,7 +37,7 @@ public class Order
     public int UserId { get; set; }
     public int? SubscriptionId { get; set; }
     public int BillingAddressId { get; set; }
-    public string Status { get; set; } = "pending"; // pending | paid | failed | refunded | cancelled
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public decimal TotalAmount { get; set; }
     public string? StripePaymentIntentId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

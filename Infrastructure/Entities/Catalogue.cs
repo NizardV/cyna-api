@@ -15,7 +15,7 @@ public class CategoryTranslation
 {
     public int Id { get; set; }
     public int CategoryId { get; set; }
-    public string Locale { get; set; } = string.Empty; // fr | en
+    public LocaleLang Locale { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
 
@@ -28,7 +28,7 @@ public class Product
     public int CategoryId { get; set; }
     public string Slug { get; set; } = string.Empty;
     public string? TechnicalSpecs { get; set; }
-    public string? Status { get; set; } // available | unavailable | preview
+    public ProductStatus? Status { get; set; }
     public bool IsFeatured { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -46,7 +46,7 @@ public class ProductTranslation
 {
     public int Id { get; set; }
     public int ProductId { get; set; }
-    public string Locale { get; set; } = string.Empty; // fr | en
+    public LocaleLang Locale { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
@@ -58,8 +58,7 @@ public class PricingPlan
     public int Id { get; set; }
     public int ProductId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string BillingPeriod { get; set; } = string.Empty; // monthly | yearly | lifetime
-    public string BillingUnit { get; set; } = "user"; // user | device
+    public BillingPeriod BillingPeriod { get; set; }
     public decimal Price { get; set; }
     public int DiscountPercent { get; set; } = 0;
     public bool IsActive { get; set; } = true;

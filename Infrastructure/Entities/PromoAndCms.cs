@@ -37,7 +37,7 @@ public class CarouselSlideTranslation
 {
     public int Id { get; set; }
     public int SlideId { get; set; }
-    public string Locale { get; set; } = string.Empty; // fr | en
+    public LocaleLang Locale { get; set; }
     public string? Title { get; set; }
     public string? Subtitle { get; set; }
     public string? ButtonText { get; set; }
@@ -57,7 +57,7 @@ public class SiteSettingTranslation
 {
     public int Id { get; set; }
     public int SettingId { get; set; }
-    public string Locale { get; set; } = string.Empty; // fr | en
+    public LocaleLang Locale { get; set; }
     public string SettingValue { get; set; } = string.Empty;
 
     public SiteSetting Setting { get; set; } = null!;
@@ -71,7 +71,7 @@ public class ContactMessage
     public string Email { get; set; } = string.Empty;
     public string Subject { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
-    public string Status { get; set; } = "new"; // new | in_progress | resolved | closed
+    public ContactStatus Status { get; set; } = ContactStatus.New;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public User? User { get; set; }
@@ -92,7 +92,7 @@ public class ChatbotMessage
 {
     public int Id { get; set; }
     public int ConversationId { get; set; }
-    public string Sender { get; set; } = string.Empty; // user | bot | agent
+    public ChatbotSender Sender { get; set; }
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
