@@ -1,9 +1,5 @@
 namespace Infrastructure.Entities.PromoAndCms;
 
-using Domain.Entities;
-
-using User = Entities.User;
-
 public class ChatbotConversation
 {
     public int Id { get; set; }

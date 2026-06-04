@@ -1,9 +1,5 @@
 namespace Infrastructure.Entities.PromoAndCms;
 
-using Domain.Entities;
-
-using User = Entities.User;
-
 public class ContactMessage
 {
     public int Id { get; set; }

@@ -1,10 +1,6 @@
 namespace Infrastructure.Entities.AddressAndPayment;
 
-using Domain.Entities;
-
-using Infrastructure.Entities.OrdersAndSubscriptions;
-
-using User = Entities.User;
+using OrdersAndSubscriptions;
 
 public class Address
 {

@@ -2,8 +2,6 @@ namespace Infrastructure.Entities;
 
 using Catalogue;
 
-using Domain.Entities;
-
 public class CartItem
 {
     public int Id { get; set; }

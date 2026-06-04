@@ -1,5 +1,4 @@
 ﻿using Bogus;
-using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +29,7 @@ public static class DbInitializer
     private static readonly SubscriptionStatus[] SubStatuses    = [SubscriptionStatus.Active, SubscriptionStatus.Cancelled, SubscriptionStatus.Expired, SubscriptionStatus.Pending, SubscriptionStatus.Suspended];
     private static readonly BillingPeriod[] BillingPeriods = [BillingPeriod.Lifetime, BillingPeriod.Monthly, BillingPeriod.Yearly];
     private static readonly BillingUnit[] BillingUnits   = [BillingUnit.Device, BillingUnit.User];
-    private static readonly CardBrand[] CardBrands     = [CardBrand.mastercard, CardBrand.visa];
+    private static readonly CardBrand[] CardBrands     = [CardBrand.Mastercard, CardBrand.Visa];
     private static readonly LocaleLang[] Locales        = [LocaleLang.En, LocaleLang.Fr];
 
     private static readonly PasswordHasher<object> Hasher = new();

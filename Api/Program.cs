@@ -81,7 +81,6 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // DI m�tiers
-builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 // Hasher de mot de passe
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();

@@ -1,9 +1,5 @@
 namespace Infrastructure.Entities.AuthCodes;
 
-using Domain.Entities;
-
-using User = Entities.User;
-
 public class PasswordResetCode
 {
     public int Id { get; set; }

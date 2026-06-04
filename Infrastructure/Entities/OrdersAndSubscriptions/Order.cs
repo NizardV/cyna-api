@@ -2,11 +2,7 @@ namespace Infrastructure.Entities.OrdersAndSubscriptions;
 
 using AddressAndPayment;
 
-using Domain.Entities;
-
 using PromoAndCms;
-
-using User = Entities.User;
 
 public class Order
 {

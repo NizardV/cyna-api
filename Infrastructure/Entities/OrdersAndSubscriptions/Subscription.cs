@@ -2,10 +2,6 @@ namespace Infrastructure.Entities.OrdersAndSubscriptions;
 
 using Catalogue;
 
-using Domain.Entities;
-
-using User = Entities.User;
-
 public class Subscription
 {
     public int Id { get; set; }

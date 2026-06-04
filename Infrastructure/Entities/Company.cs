@@ -1,7 +1,5 @@
 namespace Infrastructure.Entities;
 
-using Domain.Entities;
-
 public class Company
 {
     public int Id { get; set; }

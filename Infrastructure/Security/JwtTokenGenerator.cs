@@ -8,8 +8,9 @@ using Application.Interfaces;
 namespace Infrastructure.Security;
 
 using Entities;
+using Tools;
 
-public class JwtTokenGenerator : ITokenGenerator
+public class JwtTokenGenerator
 {
     private readonly JwtOptions _options;
 
@@ -18,7 +19,7 @@ public class JwtTokenGenerator : ITokenGenerator
         _options = options.Value;
     }
 
-    public string GenerateToken(Domain.Entities.User user)
+    public string GenerateToken(User user)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -26,8 +27,7 @@ public class JwtTokenGenerator : ITokenGenerator
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
+            new Claim(ClaimTypes.Role, user.Role.GetEnumDescription())};
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,

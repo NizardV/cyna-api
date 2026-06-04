@@ -1,7 +1,5 @@
 namespace Infrastructure.Entities.AddressAndPayment;
 
-using Domain.Entities;
-
 public class PaymentMethod
 {
     public int Id { get; set; }
