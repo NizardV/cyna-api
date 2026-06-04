@@ -4,11 +4,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Application.Interfaces;
-using Domain.Entities;
 
 namespace Infrastructure.Security;
 
-public class JwtTokenGenerator : ITokenGenerator
+using Entities;
+using Tools;
+
+public class JwtTokenGenerator
 {
     private readonly JwtOptions _options;
 
@@ -24,9 +26,8 @@ public class JwtTokenGenerator : ITokenGenerator
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+            new Claim(ClaimTypes.Role, user.Role.GetEnumDescription())};
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,

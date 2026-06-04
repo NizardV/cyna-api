@@ -1,5 +1,7 @@
 namespace Infrastructure.Entities;
 
+using Catalogue;
+
 public class CartItem
 {
     public int Id { get; set; }

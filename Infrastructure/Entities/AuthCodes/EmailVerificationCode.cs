@@ -1,4 +1,4 @@
-namespace Infrastructure.Entities;
+namespace Infrastructure.Entities.AuthCodes;
 
 public class EmailVerificationCode
 {

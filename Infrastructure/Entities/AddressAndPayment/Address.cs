@@ -1,5 +1,6 @@
-namespace Infrastructure.Entities;
+namespace Infrastructure.Entities.AddressAndPayment;
 
+using OrdersAndSubscriptions;
 
 public class Address
 {
