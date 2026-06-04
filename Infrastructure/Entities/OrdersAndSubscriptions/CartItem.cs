@@ -9,8 +9,8 @@ public class CartItem
     public int ProductId { get; set; }
     public int PricingPlanId { get; set; }
 
-    public int quantityUsers { get; set; }
-    public int quantityDevices { get; set; }
+    public int QuantityUsers { get; set; }
+    public int QuantityDevices { get; set; }
 
     public User User { get; set; } = null!;
     public Product Product { get; set; } = null!;
