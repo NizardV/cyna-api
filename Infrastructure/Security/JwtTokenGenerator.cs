@@ -4,9 +4,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Application.Interfaces;
-using Domain.Entities;
 
 namespace Infrastructure.Security;
+
+using Entities;
 
 public class JwtTokenGenerator : ITokenGenerator
 {
@@ -17,14 +18,14 @@ public class JwtTokenGenerator : ITokenGenerator
         _options = options.Value;
     }
 
-    public string GenerateToken(User user)
+    public string GenerateToken(Domain.Entities.User user)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
             new Claim(ClaimTypes.Role, user.Role)
         };
 

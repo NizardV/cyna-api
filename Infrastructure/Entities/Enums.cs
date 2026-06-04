@@ -63,5 +63,12 @@ public enum ProductStatus
 {
     Available,
     Unavailable,
+    OutOfStock,
     Preview
+}
+
+public enum CardBrand
+{
+    visa,
+    mastercard
 }

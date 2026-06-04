@@ -3,12 +3,15 @@
 public class User
 {
     public int Id { get; set; }
-
-    public string Username { get; set; } = string.Empty;
-
-    public string Password { get; set; } = string.Empty;
-
     public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Role { get; set; } = "user"; // user | admin | super_admin
+    public bool IsEmailVerified { get; set; } = false;
+    public string? TwoFactorSecret { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public string Role { get; set; } = "User";
+    // FK → Company (nullable: admins have no company)
+    public int? CompanyId { get; set; }
 }

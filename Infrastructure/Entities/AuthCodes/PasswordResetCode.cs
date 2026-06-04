@@ -1,4 +1,8 @@
-namespace Infrastructure.Entities;
+namespace Infrastructure.Entities.AuthCodes;
+
+using Domain.Entities;
+
+using User = Entities.User;
 
 public class PasswordResetCode
 {

@@ -4,10 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using Application.Interfaces;
-using Application.Services;
-using Domain.Repositories;
 using Infrastructure.Data;
-using Infrastructure.Repositories;
 using Infrastructure.Security;
 
 using NLog;
@@ -84,11 +81,6 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // DI m�tiers
-builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<IGameRepository, EfGameRepository>();
-
-builder.Services.AddScoped<IUserRepository, EfUserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 // Hasher de mot de passe
