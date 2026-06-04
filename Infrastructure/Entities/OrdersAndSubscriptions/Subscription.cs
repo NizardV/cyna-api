@@ -1,5 +1,6 @@
 namespace Infrastructure.Entities.OrdersAndSubscriptions;
 
+using System.ComponentModel.DataAnnotations;
 using Catalogue;
 
 public class Subscription
@@ -8,7 +9,10 @@ public class Subscription
     public int UserId { get; set; }
     public int ProductId { get; set; }
     public int PricingPlanId { get; set; }
+
+    [MaxLength(255)]
     public string? StripeSubscriptionId { get; set; }
+
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Pending;
     public DateTime CurrentPeriodStart { get; set; }
     public DateTime CurrentPeriodEnd { get; set; }
