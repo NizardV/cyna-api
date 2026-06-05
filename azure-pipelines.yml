@@ -30,16 +30,15 @@ variables:
 
 stages:
 - stage: CI_CD_MultiEnv
-  displayName: 'CI/CD Multi-Environnements — Cyna API'
+  displayName: 'CI/CD Multi-Environnements - Cyna API'
   jobs:
   - job: Build_And_Deploy
     steps:
-
     - task: UseDotNet@2
       displayName: 'Use .NET Core sdk'
       inputs:
         packageType: 'sdk'
-        version: '8.x
+        version: '8.x'
 
     # ── 1. Analyse statique SonarCloud ─────────────────────────────
     - task: SonarCloudPrepare@3
