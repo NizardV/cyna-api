@@ -3,8 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+
+using Api.Interceptors;
+
 using Application.Interfaces;
+using Application.Interfaces.Services;
+using Application.Services;
+
 using Infrastructure.Data;
+using Infrastructure.Interfaces;
+using Infrastructure.Repositories;
 using Infrastructure.Security;
 
 using NLog;
@@ -46,9 +54,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    options.UseSqlite(connectionString).AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>()));
 
 // Jwt options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -81,21 +90,35 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // DI m�tiers
+// --- Dépôts (Infrastructure → Domain) ---
+builder.Services.AddScoped<IUserRepository,         UserRepository>();
+builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+
+// --- Services (Application) ---
+builder.Services.AddScoped<IUserService,         UserService>();
+builder.Services.AddScoped<IOrderService,        OrderService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ICatalogService,      CatalogService>();
+
 
 // Hasher de mot de passe
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await context.Database.MigrateAsync();
 
+    if (args.Contains("--seed") && !app.Environment.IsProduction())
+    {
+        await DbInitializer.SeedAsync(context);
+    }
+}
 if (!app.Environment.IsProduction())
 {
-    using var scope = app.Services.CreateScope();
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-
-    await context.Database.MigrateAsync();
-    await DbInitializer.SeedAsync(context);
-
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options =>

@@ -3,9 +3,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Application.Interfaces;
 
 namespace Infrastructure.Security;
+
+using Domain.Entities;
 
 using Entities;
 using Tools;
