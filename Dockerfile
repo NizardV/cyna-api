@@ -30,9 +30,8 @@ RUN dotnet publish Api/Api.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Création d'un user non-root pour la sécurité
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-USER appuser
+# Utilisation de l'utilisateur non-root par défaut de .NET
+USER app
 
 COPY --from=build /app/publish .
 
