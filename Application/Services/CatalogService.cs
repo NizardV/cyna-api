@@ -1,9 +1,10 @@
-using Application.Dtos.Catalog;
 using Application.Interfaces.Services;
 using Domain.Repositories;
 using NLog;
 
 namespace Application.Services;
+
+using Domain.Dto.Catalog;
 
 /// <summary>
 /// Service catalogue.

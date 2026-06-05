@@ -2,6 +2,8 @@ using Infrastructure.Entities;
 
 namespace Domain.Repositories;
 
+using Entities;
+
 /// <summary>
 /// Interface du dépôt utilisateur.
 /// Définit les opérations de lecture/écriture sur les données utilisateur.

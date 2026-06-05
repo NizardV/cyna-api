@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+
+using Api.Interceptors;
+
 using Application.Interfaces;
 using Application.Interfaces.Services;
 using Application.Services;
@@ -52,9 +55,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    options.UseSqlite(connectionString).AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>()));
 
 // Jwt options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -104,6 +108,7 @@ builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
 
 var app = builder.Build();
+var shouldSeed = args.Contains("--seed");
 
 if (!app.Environment.IsProduction())
 {
@@ -112,7 +117,11 @@ if (!app.Environment.IsProduction())
     var context = services.GetRequiredService<AppDbContext>();
 
     await context.Database.MigrateAsync();
-    await DbInitializer.SeedAsync(context);
+
+    if (shouldSeed)
+    {
+        await DbInitializer.SeedAsync(context);
+    }
 
     app.MapOpenApi();
     app.UseSwagger();

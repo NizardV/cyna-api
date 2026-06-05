@@ -6,6 +6,8 @@ using NLog;
 
 namespace Infrastructure.Repositories;
 
+using Domain.Entities;
+
 /// <summary>
 /// Implémentation du dépôt utilisateur via Entity Framework Core.
 /// </summary>

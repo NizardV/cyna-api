@@ -1,4 +1,4 @@
-using Infrastructure.Entities.Catalogue;
+using Domain.Entities.Catalogue;
 
 namespace Domain.Repositories;
 

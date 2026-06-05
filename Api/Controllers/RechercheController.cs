@@ -1,9 +1,10 @@
-using Application.Dtos.Catalog;
 using Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace Api.Controllers;
+
+using Domain.Dto.Catalog;
 
 using ILogger = NLog.ILogger;
 

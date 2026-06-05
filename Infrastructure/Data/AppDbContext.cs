@@ -2,11 +2,14 @@
 
 namespace Infrastructure.Data;
 
+using Domain.Entities;
+using Domain.Entities.AddressAndPayment;
+using Domain.Entities.AuthCodes;
+using Domain.Entities.Catalogue;
+using Domain.Entities.OrdersAndSubscriptions;
+using Domain.Entities.PromoAndCms;
+
 using Entities;
-using Entities.AddressAndPayment;
-using Entities.AuthCodes;
-using Entities.Catalogue;
-using Entities.OrdersAndSubscriptions;
 using Entities.PromoAndCms;
 
 public class AppDbContext : DbContext

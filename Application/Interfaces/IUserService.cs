@@ -1,6 +1,6 @@
-using Application.Dtos.User;
-
 namespace Application.Interfaces.Services;
+
+using Domain.Dto.User;
 
 /// <summary>
 /// Interface du service de gestion du profil et de la sécurité utilisateur.

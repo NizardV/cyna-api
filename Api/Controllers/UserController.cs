@@ -1,11 +1,13 @@
 using Tools;
-using Application.Dtos.User;
+
 using Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace Api.Controllers;
+
+using Domain.Dto.User;
 
 using ILogger = NLog.ILogger;
 

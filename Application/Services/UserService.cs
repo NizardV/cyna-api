@@ -1,10 +1,11 @@
-using Application.Dtos.User;
 using Application.Interfaces;
 using Application.Interfaces.Services;
 using Domain.Repositories;
 using NLog;
 
 namespace Application.Services;
+
+using Domain.Dto.User;
 
 /// <summary>
 /// Service de gestion du profil et de la sécurité utilisateur.

@@ -6,13 +6,16 @@ namespace Infrastructure.Data;
 
 using Bogus.DataSets;
 
+using Domain.Entities;
+using Domain.Entities.AddressAndPayment;
+using Domain.Entities.Catalogue;
+using Domain.Entities.OrdersAndSubscriptions;
+using Domain.Entities.PromoAndCms;
+
 using Entities;
-using Entities.AddressAndPayment;
-using Entities.Catalogue;
-using Entities.OrdersAndSubscriptions;
 using Entities.PromoAndCms;
 
-using Address = Entities.AddressAndPayment.Address;
+using Address = Domain.Entities.AddressAndPayment.Address;
 
 /// <summary>
 /// Seeds the database with realistic fake data using the Bogus library.

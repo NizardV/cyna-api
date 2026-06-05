@@ -7,6 +7,8 @@ using Application.Interfaces;
 
 namespace Infrastructure.Security;
 
+using Domain.Entities;
+
 using Entities;
 using Tools;
 

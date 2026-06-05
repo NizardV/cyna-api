@@ -1,6 +1,6 @@
-using Infrastructure.Entities.OrdersAndSubscriptions;
-
 namespace Domain.Repositories;
+
+using Entities.OrdersAndSubscriptions;
 
 /// <summary>
 /// Interface du dépôt des abonnements utilisateur.

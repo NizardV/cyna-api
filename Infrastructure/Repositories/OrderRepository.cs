@@ -1,10 +1,12 @@
 using Domain.Repositories;
 using Infrastructure.Data;
-using Infrastructure.Entities.OrdersAndSubscriptions;
+
 using Microsoft.EntityFrameworkCore;
 using NLog;
 
 namespace Infrastructure.Repositories;
+
+using Domain.Entities.OrdersAndSubscriptions;
 
 /// <summary>
 /// Implémentation du dépôt des commandes via Entity Framework Core.

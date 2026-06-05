@@ -1,6 +1,6 @@
-using Application.Dtos.Catalog;
-
 namespace Application.Interfaces.Services;
+
+using Domain.Dto.Catalog;
 
 /// <summary>
 /// Interface du service catalogue.
