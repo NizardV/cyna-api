@@ -25,4 +25,8 @@
       <Link>stylecop.json</Link>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
 </Project>
