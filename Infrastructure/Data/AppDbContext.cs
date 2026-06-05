@@ -35,6 +35,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
 
     // ── Cart ──────────────────────────────────────────────────────────────
+    // CartItem lives in Infrastructure.Entities (not OrdersAndSubscriptions)
     public DbSet<CartItem> CartItems => Set<CartItem>();
 
     // ── Orders & subscriptions ────────────────────────────────────────────
