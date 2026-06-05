@@ -4,7 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 using Application.Interfaces;
+using Application.Interfaces.Services;
+using Application.Services;
+
+using Domain.Repositories;
+
 using Infrastructure.Data;
+using Infrastructure.Repositories;
 using Infrastructure.Security;
 
 using NLog;
@@ -81,6 +87,18 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // DI m�tiers
+// --- Dépôts (Infrastructure → Domain) ---
+builder.Services.AddScoped<IUserRepository,         UserRepository>();
+builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+
+// --- Services (Application) ---
+builder.Services.AddScoped<IUserService,         UserService>();
+builder.Services.AddScoped<IOrderService,        OrderService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ICatalogService,      CatalogService>();
+
 
 // Hasher de mot de passe
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
