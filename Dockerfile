@@ -11,6 +11,7 @@ COPY Application/Application.csproj               Application/
 COPY Domain/Domain.csproj                         Domain/
 COPY Infrastructure/Infrastructure.csproj         Infrastructure/
 COPY UnitTests/UnitTests.csproj                   UnitTests/
+COPY Tools/Tools.csproj                           Tools/
 COPY CynaApi.sln                                  ./
 
 RUN dotnet restore CynaApi.sln
