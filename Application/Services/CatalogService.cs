@@ -1,10 +1,12 @@
 using Application.Interfaces.Services;
-using Domain.Repositories;
+
 using NLog;
 
 namespace Application.Services;
 
 using Domain.Dto.Catalog;
+
+using Infrastructure.Interfaces;
 
 /// <summary>
 /// Service catalogue.
@@ -74,28 +76,18 @@ public class CatalogService : ICatalogService
                 return new ProductDto
                 {
                     Id          = p.Id,
-                    Slug        = p.Slug,
                     Name        = translation?.Name ?? p.Slug,
                     Description = translation?.Description ?? string.Empty,
                     Status      = p.Status?.ToString() ?? string.Empty,
-                    IsFeatured  = p.IsFeatured,
-                    CategoryId  = p.CategoryId,
-                    CategoryName = catTranslation?.Name ?? p.Category?.Slug ?? string.Empty,
                     ImageUrl    = p.Images.FirstOrDefault()?.ImageUrl,
-                    PricingPlans = p.PricingPlans.Select(pp => new PricingPlanDto
-                    {
-                        Id            = pp.Id,
-                        Name          = pp.Name,
-                        BillingPeriod = pp.BillingPeriod.ToString(),
-                        DiscountPercent = pp.DiscountPercent,
-                        PricingTiers  = pp.PricingTiers.Select(t => new PricingTierDto
-                        {
-                            UnitType     = t.unitType.ToString(),
-                            MinQuantity  = t.minQuantity,
-                            MaxQuantity  = t.maxQuantity,
-                            PricePerUnit = t.PricePerUnit,
-                        }).ToList(),
-                    }).ToList(),
+                    // get lowest price from all pricing plans and tiers
+                    Price = p.PricingPlans
+                        .SelectMany(pp => pp.PricingTiers.Select(t => new {
+                            Price = t.PricePerUnit * (1 - pp.DiscountPercent / 100m)
+                        }))
+                        .Select(x => x.Price)
+                        .DefaultIfEmpty(0)
+                        .Min(),
                 };
             }).ToList(),
         };

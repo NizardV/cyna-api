@@ -1,4 +1,3 @@
-using Domain.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +6,8 @@ using NLog;
 namespace Infrastructure.Repositories;
 
 using Domain.Entities;
+
+using Interfaces;
 
 /// <summary>
 /// Implémentation du dépôt utilisateur via Entity Framework Core.

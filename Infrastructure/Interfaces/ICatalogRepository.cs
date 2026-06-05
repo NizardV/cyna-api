@@ -1,6 +1,6 @@
-using Domain.Entities.Catalogue;
+namespace Infrastructure.Interfaces;
 
-namespace Domain.Repositories;
+using Domain.Entities.Catalogue;
 
 /// <summary>
 /// Interface du dépôt du catalogue produits.

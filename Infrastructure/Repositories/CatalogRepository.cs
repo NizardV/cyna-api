@@ -1,4 +1,3 @@
-using Domain.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 
@@ -8,6 +7,8 @@ using NLog;
 namespace Infrastructure.Repositories;
 
 using Domain.Entities.Catalogue;
+
+using Interfaces;
 
 /// <summary>
 /// Implémentation du dépôt catalogue via Entity Framework Core.
@@ -88,20 +89,26 @@ public class CatalogRepository : ICatalogRepository
         // --- Tri ---
         query = sortBy switch
         {
-            "price_asc" => query.OrderBy(p =>
-                p.PricingPlans
-                    .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
-                    .SelectMany(pp => pp.PricingTiers)
-                    .Min(t => (decimal?)t.PricePerUnit) ?? decimal.MaxValue),
-            "price_desc" => query.OrderByDescending(p =>
-                p.PricingPlans
-                    .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
-                    .SelectMany(pp => pp.PricingTiers)
-                    .Min(t => (decimal?)t.PricePerUnit) ?? decimal.Zero),
-            "name" => query.OrderBy(p =>
-                p.Translations.First().Name),
-            _ => query.OrderByDescending(p => p.IsFeatured)
-                      .ThenBy(p => p.Id),
+            "price_asc" => query
+                .OrderByDescending(p => p.IsFeatured)
+                .ThenBy(p =>
+                    p.PricingPlans
+                        .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
+                        .SelectMany(pp => pp.PricingTiers)
+                        .Min(t => (decimal?)t.PricePerUnit) ?? decimal.MaxValue),
+            "price_desc" => query
+                .OrderByDescending(p => p.IsFeatured)
+                .ThenByDescending(p =>
+                    p.PricingPlans
+                        .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
+                        .SelectMany(pp => pp.PricingTiers)
+                        .Min(t => (decimal?)t.PricePerUnit) ?? decimal.Zero),
+            "name" => query
+                .OrderByDescending(p => p.IsFeatured)
+                .ThenBy(p => p.Translations.First().Name),
+            _ => query
+                .OrderByDescending(p => p.IsFeatured)
+                .ThenBy(p => p.Id),
         };
 
         // --- Pagination ---

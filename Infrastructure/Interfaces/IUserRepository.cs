@@ -1,8 +1,6 @@
-using Infrastructure.Entities;
+namespace Infrastructure.Interfaces;
 
-namespace Domain.Repositories;
-
-using Entities;
+using Domain.Entities;
 
 /// <summary>
 /// Interface du dépôt utilisateur.
