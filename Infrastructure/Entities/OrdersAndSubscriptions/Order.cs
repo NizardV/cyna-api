@@ -1,7 +1,8 @@
 namespace Infrastructure.Entities.OrdersAndSubscriptions;
 
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using AddressAndPayment;
-
 using PromoAndCms;
 
 public class Order
@@ -11,7 +12,10 @@ public class Order
     public int? SubscriptionId { get; set; }
     public int BillingAddressId { get; set; }
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
+
+    [Column(TypeName = "decimal(10,2)")]
     public decimal TotalAmount { get; set; }
+
     public string? StripePaymentIntentId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -22,15 +22,15 @@ using Address = Entities.AddressAndPayment.Address;
 public static class DbInitializer
 {
     // ── Constants matching factories.js ────────────────────────────────────
-    private static readonly string[] CategoryNames  = ["SOC", "EDR", "XDR", "SIEM", "Zero Trust", "MDM"];
+    private static readonly string[] CategoryNames   = ["SOC", "EDR", "XDR", "SIEM", "Zero Trust", "MDM"];
     private static readonly string[] ProductPrefixes = ["Cyna", "Shield", "Guard", "Sentinel", "Apex"];
     private static readonly string[] ProductSuffixes = ["EDR Pro", "XDR Suite", "SOC Manager", "Zero Trust Gateway", "SIEM Core"];
-    private static readonly OrderStatus[] OrderStatuses  = [OrderStatus.Pending, OrderStatus.Paid, OrderStatus.Cancelled, OrderStatus.Refunded, OrderStatus.Failed];
+    private static readonly OrderStatus[]        OrderStatuses  = [OrderStatus.Pending, OrderStatus.Paid, OrderStatus.Cancelled, OrderStatus.Refunded, OrderStatus.Failed];
     private static readonly SubscriptionStatus[] SubStatuses    = [SubscriptionStatus.Active, SubscriptionStatus.Cancelled, SubscriptionStatus.Expired, SubscriptionStatus.Pending, SubscriptionStatus.Suspended];
-    private static readonly BillingPeriod[] BillingPeriods = [BillingPeriod.Lifetime, BillingPeriod.Monthly, BillingPeriod.Yearly];
-    private static readonly BillingUnit[] BillingUnits   = [BillingUnit.Device, BillingUnit.User];
-    private static readonly CardBrand[] CardBrands     = [CardBrand.Mastercard, CardBrand.Visa];
-    private static readonly LocaleLang[] Locales        = [LocaleLang.En, LocaleLang.Fr];
+    private static readonly BillingPeriod[]      BillingPeriods = [BillingPeriod.Lifetime, BillingPeriod.Monthly, BillingPeriod.Yearly];
+    private static readonly BillingUnit[]        BillingUnits   = [BillingUnit.Device, BillingUnit.User];
+    private static readonly CardBrand[]          CardBrands     = [CardBrand.Mastercard, CardBrand.Visa];
+    private static readonly LocaleLang[]         Locales        = [LocaleLang.En, LocaleLang.Fr];
 
     private static readonly PasswordHasher<object> Hasher = new();
 
@@ -51,7 +51,7 @@ public static class DbInitializer
         SeedAddressesAndPayments(context, users);
         await context.SaveChangesAsync();
 
-        // ── 3. Catalogue: categories → products → plans → images ──────────
+        // ── 3. Catalogue: categories → products → plans → tiers → images ──
         var (categories, products, plans) = SeedCatalogue(context);
         await context.SaveChangesAsync();
 
@@ -107,13 +107,13 @@ public static class DbInitializer
 
     private static User MakeUser(string email, string plainPassword, UserRole role) => new()
     {
-        Email         = email,
-        FirstName     = role == UserRole.Admin || role == UserRole.SuperAdmin ? "Admin" : "User",
-        LastName      = "Cyna",
-        PasswordHash  = Hasher.HashPassword(null!, plainPassword),
-        Role          = role,
+        Email           = email,
+        FirstName       = role == UserRole.Admin || role == UserRole.SuperAdmin ? "Admin" : "User",
+        LastName        = "Cyna",
+        PasswordHash    = Hasher.HashPassword(null!, plainPassword),
+        Role            = role,
         IsEmailVerified = true,
-        CreatedAt     = DateTime.UtcNow,
+        CreatedAt       = DateTime.UtcNow,
     };
 
     // ── 2. Addresses & Payment methods ────────────────────────────────────
@@ -135,7 +135,7 @@ public static class DbInitializer
         var pmFaker = new Faker<PaymentMethod>()
             .RuleFor(p => p.StripePaymentMethodId, f => $"pm_{f.Random.AlphaNumeric(24)}")
             .RuleFor(p => p.CardBrand,             f => f.PickRandom(CardBrands))
-            .RuleFor(p => p.CardLast4,             f => f.Finance.CreditCardNumber(CardType.Visa))
+            .RuleFor(p => p.CardLast4,             f => f.Finance.CreditCardNumber(CardType.Visa)[^4..])
             .RuleFor(p => p.IsDefault,             _ => false);
 
         foreach (var user in users)
@@ -184,26 +184,25 @@ public static class DbInitializer
         }
         context.Categories.AddRange(categories);
 
-        // 2–3 products per category
         var f = new Faker();
         foreach (var cat in categories)
         {
             int count = f.Random.Int(2, 3);
             for (int p = 0; p < count; p++)
             {
-                var prefix = f.PickRandom(ProductPrefixes);
-                var suffix = f.PickRandom(ProductSuffixes);
+                var prefix      = f.PickRandom(ProductPrefixes);
+                var suffix      = f.PickRandom(ProductSuffixes);
                 var productSlug = $"{prefix}-{suffix}".ToLower().Replace(" ", "-");
 
                 var product = new Product
                 {
-                    Category     = cat,
-                    Slug         = $"{productSlug}-{f.Random.AlphaNumeric(4)}",
+                    Category       = cat,
+                    Slug           = $"{productSlug}-{f.Random.AlphaNumeric(4)}",
                     TechnicalSpecs = $"Platforms: Windows, macOS, Linux | SLA: {f.Random.Int(95, 99)}% uptime | Support: 24/7 | MaxDevices: {f.Random.Int(10, 1000)}",
-                    Status       = f.Random.Bool(0.85f) ? ProductStatus.Available : ProductStatus.Unavailable,
-                    IsFeatured   = f.Random.Bool(0.2f),
-                    CreatedAt    = f.Date.Past(1).ToUniversalTime(),
-                    UpdatedAt    = DateTime.UtcNow,
+                    Status         = f.Random.Bool(0.85f) ? ProductStatus.Available : ProductStatus.Unavailable,
+                    IsFeatured     = f.Random.Bool(0.2f),
+                    CreatedAt      = f.Date.Past(1).ToUniversalTime(),
+                    UpdatedAt      = DateTime.UtcNow,
                 };
 
                 product.Translations.Add(new ProductTranslation { Locale = LocaleLang.Fr, Name = $"{prefix} {suffix}", Description = new Faker("fr").Lorem.Paragraphs(2) });
@@ -213,34 +212,37 @@ public static class DbInitializer
                 for (int img = 0; img < 3; img++)
                     product.Images.Add(new ProductImage { ImageUrl = $"https://picsum.photos/seed/{prefix}-{img}/800/600", DisplayOrder = img });
 
-                // Pricing plans: always monthly + yearly, occasionally lifetime
-                decimal basePrice = f.Finance.Amount(49, 999);
-                decimal yearlyPrice = Math.Round(basePrice * 10, 2); // 2 months free
-
+                // ── Pricing plans + tiers ─────────────────────────────────
+                // Monthly plan — per-user and per-device tiers
                 var monthlyPlan = new PricingPlan
                 {
                     Product       = product,
                     Name          = "Mensuel",
                     BillingPeriod = BillingPeriod.Monthly,
-                    Price         = basePrice,
                     DiscountPercent = 0,
-                    IsActive      = true,
                 };
+                monthlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.User,   minQuantity = 1,   maxQuantity = 10,  PricePerUnit = Math.Round(f.Finance.Amount(5, 20), 2) });
+                monthlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.User,   minQuantity = 11,  maxQuantity = 50,  PricePerUnit = Math.Round(f.Finance.Amount(3, 10), 2) });
+                monthlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.Device, minQuantity = 1,   maxQuantity = 25,  PricePerUnit = Math.Round(f.Finance.Amount(3, 12), 2) });
+                monthlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.Device, minQuantity = 26,  maxQuantity = 100, PricePerUnit = Math.Round(f.Finance.Amount(2,  8), 2) });
+
+                // Yearly plan — ~17% cheaper per unit (2 months free)
                 var yearlyPlan = new PricingPlan
                 {
                     Product         = product,
                     Name            = "Annuel",
                     BillingPeriod   = BillingPeriod.Yearly,
-                    Price           = yearlyPrice,
-                    DiscountPercent = 17, // ~2 months free
-                    IsActive        = true,
+                    DiscountPercent = 17,
                 };
+                yearlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.User,   minQuantity = 1,   maxQuantity = 10,  PricePerUnit = Math.Round(f.Finance.Amount(40, 180), 2) });
+                yearlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.User,   minQuantity = 11,  maxQuantity = 50,  PricePerUnit = Math.Round(f.Finance.Amount(25, 100), 2) });
+                yearlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.Device, minQuantity = 1,   maxQuantity = 25,  PricePerUnit = Math.Round(f.Finance.Amount(25, 110), 2) });
+                yearlyPlan.PricingTiers.Add(new PricingTier { unitType = BillingUnit.Device, minQuantity = 26,  maxQuantity = 100, PricePerUnit = Math.Round(f.Finance.Amount(15,  70), 2) });
 
                 plans.Add(monthlyPlan);
                 plans.Add(yearlyPlan);
                 product.PricingPlans.Add(monthlyPlan);
                 product.PricingPlans.Add(yearlyPlan);
-
                 products.Add(product);
             }
         }
@@ -256,7 +258,7 @@ public static class DbInitializer
         // Carousel
         for (int i = 0; i < 4; i++)
         {
-            var seed = new Faker().Random.AlphaNumeric(6);
+            var seed  = new Faker().Random.AlphaNumeric(6);
             var slide = new CarouselSlide
             {
                 ImageUrl     = $"https://picsum.photos/seed/{seed}/1200/500",
@@ -281,9 +283,9 @@ public static class DbInitializer
     {
         var promos = new List<PromoCode>
         {
-            new() { Code = "WELCOME10", DiscountPercent = 10, IsActive = true, ExpiresAt = DateTime.UtcNow.AddMonths(6) },
-            new() { Code = "CYBER20",   DiscountPercent = 20, IsActive = true, ExpiresAt = DateTime.UtcNow.AddMonths(3) },
-            new() { Code = "EXPIRED",   DiscountPercent = 15, IsActive = false, ExpiresAt = DateTime.UtcNow.AddDays(-1) },
+            new() { Code = "WELCOME10", DiscountPercent = 10, IsActive = true,  ExpiresAt = DateTime.UtcNow.AddMonths(6) },
+            new() { Code = "CYBER20",   DiscountPercent = 20, IsActive = true,  ExpiresAt = DateTime.UtcNow.AddMonths(3) },
+            new() { Code = "EXPIRED",   DiscountPercent = 15, IsActive = false, ExpiresAt = DateTime.UtcNow.AddDays(-1)  },
         };
         context.PromoCodes.AddRange(promos);
         return promos;
@@ -298,7 +300,7 @@ public static class DbInitializer
 
         foreach (var user in regUsers)
         {
-            int itemCount = f.Random.Int(1, 3);
+            int itemCount    = f.Random.Int(1, 3);
             var pickedProducts = f.Random.ListItems(products, itemCount);
 
             foreach (var product in pickedProducts)
@@ -306,10 +308,12 @@ public static class DbInitializer
                 var plan = f.PickRandom(product.PricingPlans.ToList());
                 context.CartItems.Add(new CartItem
                 {
-                    User       = user,
-                    Product    = product,
-                    PricingPlan = plan,
-                    Quantity   = f.Random.Int(1, 5),
+                    User            = user,
+                    Product         = product,
+                    PricingPlan     = plan,
+                    // QuantityUsers / QuantityDevices replace the old Quantity field
+                    QuantityUsers   = f.Random.Int(1, 20),
+                    QuantityDevices = f.Random.Int(1, 10),
                 });
             }
         }
@@ -327,12 +331,8 @@ public static class DbInitializer
         var f        = new Faker();
         var regUsers = users.Where(u => u.Role == UserRole.User).ToList();
 
-        // Each regular user gets 1–3 historical orders
         foreach (var user in regUsers)
         {
-            // Grab the user's default address (already saved, we reference by object)
-            // We'll just reuse the first address added — EF will resolve FK after SaveChanges
-            // so we need to load it. As SeedAsync saves before calling this, we query here.
             var address = context.Addresses.Local.FirstOrDefault(a => a.UserId == user.Id)
                        ?? context.Addresses.FirstOrDefault(a => a.UserId == user.Id);
             if (address is null) continue;
@@ -343,7 +343,6 @@ public static class DbInitializer
                 var createdAt = f.Date.Past(2).ToUniversalTime();
                 var status    = f.PickRandom(OrderStatuses);
 
-                // 1 subscription per order (SaaS model)
                 var product = f.PickRandom(products);
                 var plan    = f.PickRandom(product.PricingPlans.ToList());
 
@@ -354,47 +353,58 @@ public static class DbInitializer
 
                 var subscription = new Subscription
                 {
-                    User                = user,
-                    Product             = product,
-                    PricingPlan         = plan,
+                    User                 = user,
+                    Product              = product,
+                    PricingPlan          = plan,
                     StripeSubscriptionId = $"sub_{f.Random.AlphaNumeric(24)}",
-                    Status              = f.PickRandom(SubStatuses),
-                    CurrentPeriodStart  = periodStart,
-                    CurrentPeriodEnd    = periodEnd,
-                    AutoRenew           = f.Random.Bool(0.7f),
+                    Status               = f.PickRandom(SubStatuses),
+                    CurrentPeriodStart   = periodStart,
+                    CurrentPeriodEnd     = periodEnd,
+                    AutoRenew            = f.Random.Bool(0.7f),
                 };
                 context.Subscriptions.Add(subscription);
 
-                // Order
-                int itemCount = f.Random.Int(1, 3);
+                // Build order items
+                int itemCount  = f.Random.Int(1, 3);
                 var orderItems = new List<OrderItem>();
                 for (int i = 0; i < itemCount; i++)
                 {
-                    var p2   = f.PickRandom(products);
-                    var pl2  = f.PickRandom(p2.PricingPlans.ToList());
-                    var qty  = f.Random.Int(1, 5);
+                    var p2  = f.PickRandom(products);
+                    var pl2 = f.PickRandom(p2.PricingPlans.ToList());
+
+                    // Quantities per dimension (users / devices)
+                    int qtyUsers   = f.Random.Int(1, 20);
+                    int qtyDevices = f.Random.Int(1, 10);
+
                     orderItems.Add(new OrderItem
                     {
                         Product             = p2,
                         PricingPlan         = pl2,
                         ProductNameSnapshot = p2.Translations.FirstOrDefault(t => t.Locale == LocaleLang.Fr)?.Name ?? p2.Slug,
                         PlanNameSnapshot    = pl2.Name,
-                        UnitPrice           = pl2.Price,
-                        Quantity            = qty,
+                        QuantityUsers       = qtyUsers,
+                        QuantityDevices     = qtyDevices,
                     });
                 }
 
-                var total = orderItems.Sum(i => i.UnitPrice * i.Quantity);
+                // Compute total from PricingTiers: pick the cheapest matching tier per item dimension
+                decimal total = orderItems.Sum(item =>
+                {
+                    var tiers        = item.PricingPlan.PricingTiers.ToList();
+                    decimal userCost = ResolveLineCost(tiers, BillingUnit.User,   item.QuantityUsers);
+                    decimal devCost  = ResolveLineCost(tiers, BillingUnit.Device, item.QuantityDevices);
+                    return userCost + devCost;
+                });
 
                 var order = new Order
                 {
-                    User                   = user,
-                    Subscription           = subscription,
-                    BillingAddress         = address,
-                    Status                 = status,
-                    TotalAmount            = Math.Round(total, 2),
-                    StripePaymentIntentId  = $"pi_{f.Random.AlphaNumeric(24)}",
-                    CreatedAt              = createdAt,
+                    User                  = user,
+                    Subscription          = subscription,
+                    BillingAddress        = address,
+                    Status                = status,
+                    TotalAmount           = Math.Round(total, 2),
+                    StripePaymentIntentId = $"pi_{f.Random.AlphaNumeric(24)}",
+                    CreatedAt             = createdAt,
                 };
 
                 foreach (var item in orderItems)
@@ -406,7 +416,7 @@ public static class DbInitializer
                 // Apply promo occasionally
                 if (f.Random.Bool(0.25f) && status == OrderStatus.Paid)
                 {
-                    var promo = f.PickRandom(promos.Where(p => p.IsActive).ToList());
+                    var promo    = f.PickRandom(promos.Where(p => p.IsActive).ToList());
                     var discount = Math.Round(total * promo.DiscountPercent / 100m, 2);
                     order.PromoCodes.Add(new OrderPromoCode
                     {
@@ -433,13 +443,34 @@ public static class DbInitializer
         }
     }
 
+    /// <summary>
+    /// Finds the best-matching tier for a given unit type + quantity and returns the line cost.
+    /// Falls back to the first available tier of that unit type if no range matches exactly.
+    /// Returns 0 if no tier exists for that unit type.
+    /// </summary>
+    private static decimal ResolveLineCost(List<PricingTier> tiers, BillingUnit unit, int qty)
+    {
+        if (qty <= 0) return 0m;
+
+        var unitTiers = tiers.Where(t => t.unitType == unit).ToList();
+        if (unitTiers.Count == 0) return 0m;
+
+        // Best match: a tier whose range contains qty
+        var match = unitTiers.FirstOrDefault(t => qty >= t.minQuantity && qty <= t.maxQuantity)
+                 // Fallback: the tier with the highest minQuantity that is still ≤ qty (volume overflow)
+                 ?? unitTiers.Where(t => t.minQuantity <= qty).MaxBy(t => t.minQuantity)
+                 // Last resort: cheapest tier
+                 ?? unitTiers.MinBy(t => t.PricePerUnit)!;
+
+        return Math.Round(match.PricePerUnit * qty, 2);
+    }
+
     // ── 8. Support ────────────────────────────────────────────────────────
 
     private static void SeedSupport(AppDbContext context, List<User> users)
     {
-        var f           = new Faker("fr");
-        ContactStatus[] contactStatuses = { ContactStatus.InProgress, ContactStatus.Closed, ContactStatus.New, ContactStatus.Resolved };
-        var senders     = new[] { "user", "bot", "agent" };
+        var f              = new Faker("fr");
+        ContactStatus[] contactStatuses = [ContactStatus.InProgress, ContactStatus.Closed, ContactStatus.New, ContactStatus.Resolved];
 
         // Contact messages — some from guests, some from registered users
         for (int i = 0; i < 10; i++)
@@ -461,9 +492,9 @@ public static class DbInitializer
         {
             var conv = new ChatbotConversation
             {
-                UserId          = user.Id,
+                UserId           = user.Id,
                 EscalatedToHuman = f.Random.Bool(0.2f),
-                StartedAt       = f.Date.Past(1).ToUniversalTime(),
+                StartedAt        = f.Date.Past(1).ToUniversalTime(),
             };
 
             int msgCount = f.Random.Int(3, 8);

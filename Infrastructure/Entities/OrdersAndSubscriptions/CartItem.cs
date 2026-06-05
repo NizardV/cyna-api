@@ -8,10 +8,11 @@ public class CartItem
     public int UserId { get; set; }
     public int ProductId { get; set; }
     public int PricingPlanId { get; set; }
-    public int Quantity { get; set; } = 1;
+
+    public int QuantityUsers { get; set; }
+    public int QuantityDevices { get; set; }
 
     public User User { get; set; } = null!;
     public Product Product { get; set; } = null!;
     public PricingPlan PricingPlan { get; set; } = null!;
 }
-

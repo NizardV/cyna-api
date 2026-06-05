@@ -1,5 +1,7 @@
 namespace Infrastructure.Entities.PromoAndCms;
 
+using System.ComponentModel.DataAnnotations;
+
 public class CarouselSlideTranslation
 {
     public int Id { get; set; }
