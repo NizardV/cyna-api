@@ -29,10 +29,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="..\stylecop.json">
-      <Link>stylecop.json</Link>
-    </Content>
-  </ItemGroup>
-
 </Project>

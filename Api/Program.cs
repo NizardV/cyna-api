@@ -108,21 +108,18 @@ builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
 
 var app = builder.Build();
-var shouldSeed = args.Contains("--seed");
-
-if (!app.Environment.IsProduction())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await context.Database.MigrateAsync();
 
-    if (shouldSeed)
+    if (args.Contains("--seed") && !app.Environment.IsProduction())
     {
         await DbInitializer.SeedAsync(context);
     }
-
+}
+if (!app.Environment.IsProduction())
+{
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
