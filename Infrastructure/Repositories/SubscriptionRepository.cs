@@ -1,4 +1,3 @@
-using Domain.Repositories;
 using Infrastructure.Data;
 
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +6,8 @@ using NLog;
 namespace Infrastructure.Repositories;
 
 using Domain.Entities.OrdersAndSubscriptions;
+
+using Interfaces;
 
 /// <summary>
 /// Implémentation du dépôt des abonnements via Entity Framework Core.
