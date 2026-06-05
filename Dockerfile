@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 # Stage 1 : Build
 # ─────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copie des .csproj pour layer-cache NuGet restore
@@ -27,7 +27,7 @@ RUN dotnet publish Api/Api.csproj \
 # ─────────────────────────────────────────────
 # Stage 2 : Runtime
 # ─────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Création d'un user non-root pour la sécurité
