@@ -5,10 +5,10 @@ namespace Application.Dtos
     public class LoginRequestDto
     {
         [Required]
-        public string Username { get; set; } = string.Empty;
+        [EmailAddress] // Optionnel, mais idéal pour valider le format côté API
+        public string Email { get; set; } = string.Empty;
 
         [Required]
         public string Password { get; set; } = string.Empty;
     }
-
 }
