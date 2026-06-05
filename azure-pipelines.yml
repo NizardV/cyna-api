@@ -38,7 +38,7 @@ stages:
       displayName: 'Use .NET Core sdk'
       inputs:
         packageType: 'sdk'
-        version: '8.x'
+        version: '10.x'
 
     # ── 1. Analyse statique SonarCloud ─────────────────────────────
     - task: SonarCloudPrepare@3
