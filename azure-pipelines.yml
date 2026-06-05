@@ -41,7 +41,7 @@ stages:
       inputs:
         SonarCloud: 'SonarCloud-CYNA'
         organization: '2028di1p5g3'
-        scannerMode: 'MSBuild'
+        scannerMode: 'dotnet'
         projectKey: '2028DI1P5G3_Cyna-Api'
         projectName: 'CYNA - API'
 
