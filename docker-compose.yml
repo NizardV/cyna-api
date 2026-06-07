@@ -38,7 +38,7 @@ services:
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    container_name: cyna-api-${ENV_NAME:-local}
+    container_name: cyna-server-${ENV_NAME:-local}
     restart: unless-stopped
     depends_on:
       db:

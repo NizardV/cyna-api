@@ -135,6 +135,7 @@ stages:
       inputs:
         sshEndpoint: 'OVH-SSH-Connection'
         runOptions: 'inline'
+        failOnStdErr: false
         inline: |
           echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
 
