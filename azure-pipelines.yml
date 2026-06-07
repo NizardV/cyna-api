@@ -85,6 +85,7 @@ stages:
     # ── 4. Build image Docker ──────────────────────────────────────
     - script: |
         docker build \
+          --no-cache \
           -t $(FULL_IMAGE):$(envName) \
           -t $(FULL_IMAGE):latest \
           -t $(FULL_IMAGE):sha-$(Build.SourceVersion) \
