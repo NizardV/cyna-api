@@ -140,20 +140,18 @@ stages:
         inline: |
           echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
 
-          docker pull ghcr.io/nizardv/cyna-api:$(envName)
-
           if [ "$(envName)" = "production" ]; then
             API_PORT=4000
+            ASPNETCORE_ENV=Production
           else
             API_PORT=4001
+            ASPNETCORE_ENV=Staging
           fi
 
-          # Lance (ou relance) le stack complet via docker compose
-          # Le fichier .env doit être présent sur le serveur OVH
           cd ~/cyna-api
 
-          ENV_NAME=$(envName) API_PORT=$API_PORT \
+          ENV_NAME=$(envName) API_PORT=$API_PORT ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENV \
             docker compose pull api
 
-          ENV_NAME=$(envName) API_PORT=$API_PORT \
-            docker compose up -d --no-build
+          ENV_NAME=$(envName) API_PORT=$API_PORT ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENV \
+            docker compose up -d --no-build --force-recreate
