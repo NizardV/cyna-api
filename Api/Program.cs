@@ -56,8 +56,23 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
-    options.UseSqlite(connectionString).AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>()));
+{
+    // Ajoute l'intercepteur commun
+    options.AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>());
+
+    // Si on est en local (Development), on peut rester sur SQLite
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        // En Staging et Production (sur OVH), on utilise PostgreSQL
+        options.UseNpgsql(connectionString);
+    }
+});
 
 // Jwt options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
