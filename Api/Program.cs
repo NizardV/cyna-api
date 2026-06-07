@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using System.Text;
 
 using Api.Interceptors;
@@ -14,6 +10,12 @@ using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 using NLog;
 using NLog.Web;
@@ -72,6 +74,11 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         // En Staging et Production (sur OVH), on utilise PostgreSQL
         options.UseNpgsql(connectionString);
     }
+
+    // Fix: décalage de version EF tools (10.0.7) vs runtime (10.0.8)
+    options.ConfigureWarnings(warnings =>
+        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+
 });
 
 // Jwt options
