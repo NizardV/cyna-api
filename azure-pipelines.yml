@@ -3,7 +3,6 @@ trigger:
     include:
       - main
       - dev
-      - feat/ci-cd
 
 pool:
   name: 'CyanPool'
