@@ -13,6 +13,8 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+using Api.Security;
+
 using Infrastructure.Security;
 
 using NLog;
@@ -22,6 +24,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 logger.Debug("init main");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -95,12 +106,18 @@ builder.Services.AddScoped<IUserRepository,         UserRepository>();
 builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICartRepository,         CartRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
 builder.Services.AddScoped<IOrderService,        OrderService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<ICartService,         CartService>();
+
+
+// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
+builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
 
 
 // Hasher de mot de passe
@@ -127,6 +144,8 @@ if (!app.Environment.IsProduction())
         options.RoutePrefix = string.Empty;
     });
 }
+
+app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 
