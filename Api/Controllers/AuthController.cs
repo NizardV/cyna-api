@@ -24,11 +24,7 @@ public class AuthController : ControllerBase
 
         if (!result.Success)
         {
-            // Option A : Tu renvoies quand même un 401 pour être Standard HTTP rest
             return Unauthorized(result);
-
-            // Option B : Si ton Front préfère recevoir du 200 OK même si ça a échoué (vu la structure du DTO) :
-            // return Ok(result);
         }
 
         return Ok(result);
