@@ -7,7 +7,9 @@ using System.Text;
 using Api.Interceptors;
 
 using Application.Interfaces;
-using Application.Interfaces.Services;
+
+using Scalar.AspNetCore;
+
 using Application.Services;
 
 using Infrastructure.Data;
@@ -24,7 +26,18 @@ var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentCla
 logger.Debug("init main");
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteDevServer", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();  // needed to send cookies/auth headers
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {
     // Document de base
@@ -53,6 +66,8 @@ builder.Services.AddSwaggerGen(options =>
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
 });
+
+var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
 
 builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -120,15 +135,24 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsProduction())
 {
     app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+
+    if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-    });
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            options.RoutePrefix = string.Empty;
+        });
+    }
+    else
+    {
+        app.MapScalarApiReference();
+    }
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowViteDevServer");
 
 app.UseAuthentication();
 app.UseAuthorization();
