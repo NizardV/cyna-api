@@ -15,6 +15,8 @@ using Domain.Entities.PromoAndCms;
 using Entities;
 using Entities.PromoAndCms;
 
+using Tools;
+
 using Address = Domain.Entities.AddressAndPayment.Address;
 
 /// <summary>

@@ -7,8 +7,9 @@ using Domain.Entities.AuthCodes;
 using Domain.Entities.OrdersAndSubscriptions;
 using Domain.Entities.PromoAndCms;
 
-using Infrastructure.Entities;
 using Infrastructure.Entities.PromoAndCms;
+
+using Tools;
 
 public class User
 {

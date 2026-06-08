@@ -95,12 +95,14 @@ builder.Services.AddScoped<IUserRepository,         UserRepository>();
 builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
 builder.Services.AddScoped<IOrderService,        OrderService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<ICmsService, CmsService>();
 
 
 // Hasher de mot de passe

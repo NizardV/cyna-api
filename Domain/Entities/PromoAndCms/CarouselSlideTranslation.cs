@@ -1,6 +1,6 @@
 namespace Domain.Entities.PromoAndCms;
 
-using Infrastructure.Entities;
+using Tools;
 
 public class CarouselSlideTranslation
 {

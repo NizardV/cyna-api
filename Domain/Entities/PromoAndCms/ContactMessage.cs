@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 using Domain.Entities;
 
+using Tools;
+
 public class ContactMessage
 {
     public int Id { get; set; }
