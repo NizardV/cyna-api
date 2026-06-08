@@ -96,6 +96,7 @@ builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
 builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
+builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();

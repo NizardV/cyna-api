@@ -18,6 +18,7 @@ public class CarouselRepository : ICarouselRepository
         _context = context;
     }
 
+    /// <inheritdoc />
     public async Task<IEnumerable<CarouselSlide>> GetActiveSlidesAsync(LocaleLang locale)
     {
         return await _context.CarouselSlides

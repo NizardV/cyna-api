@@ -44,10 +44,12 @@ public class HomeController : ControllerBase
 
         _logger.LogInformation("Récupération de la page d'accueil demandée avec la langue : {Locale}", locale);
         var carousel = await _cmsService.GetHomeCarouselAsync(locale);
+        var missionText = await _cmsService.GetHomeMissionTextAsync(locale);
 
         var response = new HomePageDto
         {
-            CarouselSlides = carousel
+            CarouselSlides = carousel,
+            MissionText = missionText
         };
 
         return Ok(response);

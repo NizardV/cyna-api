@@ -15,4 +15,11 @@ public interface ICmsService
     /// <param name="locale">La langue dans laquelle les textes doivent être retournés.</param>
     /// <returns>Une liste de <see cref="CarouselSlideDto"/> prête à être consommée par le front-end.</returns>
     Task<IEnumerable<CarouselSlideDto>> GetHomeCarouselAsync(LocaleLang locale);
+
+    /// <summary>
+    /// Récupère le texte de présentation (Mission) de la page d'accueil.
+    /// </summary>
+    /// <param name="locale">La langue dans laquelle le texte doit être retourné.</param>
+    /// <returns>Le texte traduit, ou null si introuvable.</returns>
+    Task<string?> GetHomeMissionTextAsync(LocaleLang locale);
 }

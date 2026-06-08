@@ -5,5 +5,13 @@
 /// </summary>
 public class HomePageDto
 {
+    /// <summary>
+    /// Liste des slides actifs pour le carrousel principal.
+    /// </summary>
     public IEnumerable<CarouselSlideDto> CarouselSlides { get; set; } = new List<CarouselSlideDto>();
+
+    /// <summary>
+    /// Le texte fixe de présentation (Mission) de l'entreprise affiché sous le carrousel.
+    /// </summary>
+    public string? MissionText { get; set; }
 }
