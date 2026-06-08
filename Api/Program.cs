@@ -17,6 +17,8 @@ using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
 using Api.Security;
 
+using Application.Interfaces.Services;
+
 using Infrastructure.Security;
 
 using NLog;
