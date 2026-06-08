@@ -3,12 +3,18 @@ using System.Text;
 using Api.Interceptors;
 
 using Application.Interfaces;
-using Application.Interfaces.Services;
+
+using Scalar.AspNetCore;
+
 using Application.Services;
 
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+using Api.Security;
+
+using Application.Interfaces.Services;
+
 using Infrastructure.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,8 +31,28 @@ var builder = WebApplication.CreateBuilder(args);
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 logger.Debug("init main");
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
+
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteDevServer", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();  // needed to send cookies/auth headers
+    });
+});
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {
     // Document de base
@@ -55,6 +81,8 @@ builder.Services.AddSwaggerGen(options =>
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
 });
+
+var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
 
 builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -117,16 +145,22 @@ builder.Services.AddScoped<IUserRepository,         UserRepository>();
 builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICartRepository,         CartRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
 builder.Services.AddScoped<IOrderService,        OrderService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<IAuthService,         AuthService>();
+builder.Services.AddScoped<ICartService,         CartService>();
 
 
-// Hasher de mot de passe
-builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
+builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+
+// Générateur de Token JWT
+builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -142,15 +176,26 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsProduction())
 {
     app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+
+    if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-    });
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            options.RoutePrefix = string.Empty;
+        });
+    }
+    else
+    {
+        app.MapScalarApiReference();
+    }
 }
 
+app.UseCors("Frontend");
+
 app.UseHttpsRedirection();
+app.UseCors("AllowViteDevServer");
 
 app.UseAuthentication();
 app.UseAuthorization();

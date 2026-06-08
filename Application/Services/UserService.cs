@@ -1,5 +1,4 @@
 using Application.Interfaces;
-using Application.Interfaces.Services;
 
 using NLog;
 
@@ -8,6 +7,8 @@ namespace Application.Services;
 using Domain.Dto.User;
 
 using Infrastructure.Interfaces;
+
+using Tools;
 
 /// <summary>
 /// Service de gestion du profil et de la sécurité utilisateur.
@@ -18,17 +19,15 @@ public class UserService : IUserService
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
 
     /// <summary>
     /// Initialise une nouvelle instance de <see cref="UserService"/>.
     /// </summary>
     /// <param name="userRepository">Le dépôt utilisateur.</param>
     /// <param name="passwordHasher">Le service de hachage de mot de passe.</param>
-    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
     }
 
     /// <inheritdoc />
@@ -87,13 +86,13 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {userId}).");
 
-        if (!_passwordHasher.VerifyPassword(user.PasswordHash, dto.CurrentPassword))
+        if (!dto.CurrentPassword.VerifyHashProvided(user.PasswordHash))
         {
             _logger.Warn("Mot de passe actuel incorrect pour l'utilisateur ID {UserId}", userId);
             throw new UnauthorizedAccessException("Le mot de passe actuel est incorrect.");
         }
 
-        var newHash = _passwordHasher.HashPassword(dto.NewPassword);
+        var newHash = dto.NewPassword.GetHash();
         await _userRepository.UpdatePasswordAsync(userId, newHash);
 
         _logger.Info("Mot de passe mis à jour avec succès pour l'utilisateur ID {UserId}", userId);

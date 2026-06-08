@@ -1,11 +1,12 @@
 using Tools;
 
-using Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace Api.Controllers;
+
+using Application.Interfaces;
 
 using Domain.Dto.User;
 

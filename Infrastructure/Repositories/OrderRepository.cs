@@ -5,6 +5,7 @@ using NLog;
 
 namespace Infrastructure.Repositories;
 
+using Domain.Entities.AddressAndPayment;
 using Domain.Entities.OrdersAndSubscriptions;
 
 using Interfaces;
@@ -18,10 +19,6 @@ public class OrderRepository : IOrderRepository
 
     private readonly AppDbContext _context;
 
-    /// <summary>
-    /// Initialise une nouvelle instance de <see cref="OrderRepository"/>.
-    /// </summary>
-    /// <param name="context">Le contexte de base de données.</param>
     public OrderRepository(AppDbContext context)
     {
         _context = context;
@@ -56,5 +53,40 @@ public class OrderRepository : IOrderRepository
             .Include(o => o.PromoCodes)
             .ThenInclude(p => p.PromoCode)
             .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Order> SaveNewOrderAsync(
+        Address billingAddress,
+        Order order,
+        IEnumerable<Subscription> subscriptions,
+        int userId)
+    {
+        _logger.Debug("Création commande pour l'utilisateur ID {UserId}", userId);
+
+        // 1. Adresse de facturation
+        _context.Addresses.Add(billingAddress);
+        await _context.SaveChangesAsync();
+
+        // 2. Commande + articles
+        order.BillingAddressId = billingAddress.Id;
+        _context.Orders.Add(order);
+        await _context.SaveChangesAsync();
+
+        // 3. Abonnements
+        var subList = subscriptions.ToList();
+        if (subList.Count > 0)
+        {
+            _context.Subscriptions.AddRange(subList);
+            await _context.SaveChangesAsync();
+        }
+
+        // 4. Vider le panier
+        await _context.CartItems
+            .Where(ci => ci.UserId == userId)
+            .ExecuteDeleteAsync();
+
+        _logger.Info("Commande ID {OrderId} créée avec succès", order.Id);
+        return order;
     }
 }
