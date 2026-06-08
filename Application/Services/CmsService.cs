@@ -15,13 +15,15 @@ public class CmsService : ICmsService
     private readonly ICarouselRepository _carouselRepository;
     private readonly ILogger<CmsService> _logger;
     private readonly ISiteSettingRepository _siteSettingRepository;
+    private readonly ICategoryRepository _categoryRepository;
 
 
-    public CmsService(ICarouselRepository carouselRepository, ILogger<CmsService> logger, ISiteSettingRepository siteSettingRepository)
+    public CmsService(ICarouselRepository carouselRepository, ILogger<CmsService> logger, ISiteSettingRepository siteSettingRepository, ICategoryRepository categoryRepository)
     {
         _carouselRepository = carouselRepository;
         _logger = logger;
-        _siteSettingRepository = siteSettingRepository; 
+        _siteSettingRepository = siteSettingRepository;
+        _categoryRepository = categoryRepository;
     }
 
     /// <inheritdoc />
@@ -63,5 +65,30 @@ public class CmsService : ICmsService
         }
 
         return text;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<CategoryDto>> GetHomeCategoriesAsync(LocaleLang locale)
+    {
+        var categories = await _categoryRepository.GetCategoriesAsync(locale);
+
+        if (!categories.Any())
+        {
+            _logger.LogWarning("Aucune catégorie n'a été trouvée dans la base de données pour la page d'accueil (Langue demandée : {Locale}).", locale);
+        }
+
+        return categories.Select(c =>
+        {
+            var translation = c.Translations.FirstOrDefault();
+
+            return new CategoryDto
+            {
+                Id = c.Id, 
+                Slug = c.Slug,
+                ImageUrl = c.ImageUrl,
+                Name = translation?.Name,
+                Description = translation?.Description
+            };
+        });
     }
 }

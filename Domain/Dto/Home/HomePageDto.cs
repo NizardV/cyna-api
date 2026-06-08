@@ -14,4 +14,9 @@ public class HomePageDto
     /// Le texte fixe de présentation (Mission) de l'entreprise affiché sous le carrousel.
     /// </summary>
     public string? MissionText { get; set; }
+
+    /// <summary>
+    /// Liste des catégories de produits à afficher sur la page d'accueil.
+    /// </summary>
+    public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
 }

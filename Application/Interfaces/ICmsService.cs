@@ -22,4 +22,9 @@ public interface ICmsService
     /// <param name="locale">La langue dans laquelle le texte doit être retourné.</param>
     /// <returns>Le texte traduit, ou null si introuvable.</returns>
     Task<string?> GetHomeMissionTextAsync(LocaleLang locale);
+
+    /// <summary>
+    /// Récupère la liste des catégories formatées pour la page d'accueil.
+    /// </summary>
+    Task<IEnumerable<CategoryDto>> GetHomeCategoriesAsync(LocaleLang locale);
 }

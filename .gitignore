@@ -9,3 +9,5 @@ riderModule.iml
 /.vs/
 **.db
 /Api/Api.csproj.user
+/Api/CynaApi.db-shm
+/Api/CynaApi.db-wal
