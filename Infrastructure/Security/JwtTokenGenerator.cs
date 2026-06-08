@@ -10,8 +10,9 @@ using Domain.Entities;
 
 using Entities;
 using Tools;
+using Interfaces;
 
-public class JwtTokenGenerator
+public class JwtTokenGenerator : ITokenGenerator
 {
     private readonly JwtOptions _options;
 

@@ -113,15 +113,15 @@ builder.Services.AddScoped<IUserService,         UserService>();
 builder.Services.AddScoped<IOrderService,        OrderService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
 
 
 // --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
 builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
 
-
-// Hasher de mot de passe
-builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+// Générateur de Token JWT
+builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
