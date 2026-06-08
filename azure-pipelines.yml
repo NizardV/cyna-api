@@ -128,8 +128,7 @@ stages:
           succeeded(),
           or(
             eq(variables['Build.SourceBranch'], 'refs/heads/main'),
-            eq(variables['Build.SourceBranch'], 'refs/heads/dev'),
-            eq(variables['Build.SourceBranch'], 'refs/heads/feat/ci-cd')
+            eq(variables['Build.SourceBranch'], 'refs/heads/dev')
           )
         )
       inputs:
