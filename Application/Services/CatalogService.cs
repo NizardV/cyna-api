@@ -1,5 +1,3 @@
-using Application.Interfaces.Services;
-
 using NLog;
 
 namespace Application.Services;
@@ -7,6 +5,8 @@ namespace Application.Services;
 using Domain.Dto.Catalog;
 
 using Infrastructure.Interfaces;
+
+using Interfaces;
 
 /// <summary>
 /// Service catalogue.

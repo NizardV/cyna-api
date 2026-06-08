@@ -1,4 +1,4 @@
-namespace Application.Interfaces.Services;
+namespace Application.Interfaces;
 
 using Domain.Dto.Orders;
 using Domain.Dto.User;

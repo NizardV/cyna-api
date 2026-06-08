@@ -1,5 +1,3 @@
-using Application.Interfaces.Services;
-
 using NLog;
 
 namespace Application.Services;
@@ -13,6 +11,12 @@ using Domain.Entities.OrdersAndSubscriptions;
 using Infrastructure.Entities;
 using Infrastructure.Interfaces;
 
+using Interfaces;
+
+/// <summary>
+/// Service de gestion de l'historique des commandes utilisateur.
+/// Mappe les entités de la base de données vers les DTOs de l'API.
+/// </summary>
 public class OrderService : IOrderService
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
