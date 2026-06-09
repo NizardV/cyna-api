@@ -32,4 +32,18 @@ public class ProductRepository : IProductRepository
             .Take(limit)
             .ToListAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<Product?> GetProductDetailsByIdAsync(int id, LocaleLang locale)
+    {
+        return await _context.Products
+            .AsNoTracking()
+            .Include(p => p.Translations.Where(t => t.Locale == locale))
+            .Include(p => p.Category)
+                .ThenInclude(c => c.Translations.Where(t => t.Locale == locale))
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.PricingPlans)
+                .ThenInclude(pp => pp.PricingTiers.OrderBy(t => t.minQuantity))
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
 }

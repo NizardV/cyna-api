@@ -20,7 +20,7 @@
       "applicationUrl": "http://localhost:5104",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "swagger": "Swagger"
+        "ApiDocs": "Swagger"
       }
     },
     "https": {
@@ -42,7 +42,7 @@
       "applicationUrl": "https://localhost:7169;http://localhost:5104",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "swagger": "Swagger"
+        "ApiDocs": "Swagger"
       }
     },
     "http-seed": {

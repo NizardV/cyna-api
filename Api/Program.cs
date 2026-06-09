@@ -42,16 +42,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowViteDevServer", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();  // needed to send cookies/auth headers
-    });
-});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
@@ -163,6 +154,7 @@ builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
 builder.Services.AddScoped<ICmsService, CmsService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
 builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
@@ -205,7 +197,6 @@ if (!app.Environment.IsProduction())
 app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
-app.UseCors("AllowViteDevServer");
 
 app.UseAuthentication();
 app.UseAuthorization();
