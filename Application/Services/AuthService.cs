@@ -69,21 +69,16 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user != null) return new AuthResultDto { Success = false, ErrorMessage = "Email déjà utilisé." };
 
-        // 2. Séparer le FullName en FirstName et LastName
-        var parts = request.FullName.Trim().Split(' ', 2);
-        var firstName = parts[0];
-        var lastName = parts.Length > 1 ? parts[1] : string.Empty;
-
-        // 3. Hasher le mot de passe
+        // 2. Hasher le mot de passe
         var hashedPassword = request.Password.GetHash();
 
-        // 4. Créer l'entité User
+        // 3. Créer l'entité User
         var newUser = new User
         {
             Email = request.Email,
             PasswordHash = hashedPassword,
-            FirstName = firstName,
-            LastName = lastName,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Role = UserRole.User,
             IsEmailVerified = false,
             CreatedAt = DateTime.UtcNow
