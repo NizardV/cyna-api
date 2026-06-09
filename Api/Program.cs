@@ -62,6 +62,9 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1"
     });
 
+    // GESTION DES CONFLITS DE NOMS DE DTO (Ex: Home.CategoryDto vs Catalog.CategoryDto)
+    options.CustomSchemaIds(type => type.FullName);
+
     // D�finition du sch�ma d�authentification Bearer
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -146,6 +149,10 @@ builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
 builder.Services.AddScoped<ICartRepository,         CartRepository>();
+builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
+builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
@@ -154,7 +161,7 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
-
+builder.Services.AddScoped<ICmsService, CmsService>();
 
 // --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
 builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
@@ -162,6 +169,8 @@ builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
 // Générateur de Token JWT
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
+// Hasher de mot de passe
+builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {

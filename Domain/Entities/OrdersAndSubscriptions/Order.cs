@@ -4,10 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 using Domain.Entities.AddressAndPayment;
 
-using Infrastructure.Entities;
 using Infrastructure.Entities.PromoAndCms;
 
 using PromoAndCms;
+
+using Tools;
 
 public class Order
 {

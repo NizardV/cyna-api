@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 using Domain.Entities.Catalogue;
 
-using Infrastructure.Entities;
+using Tools;
 
 public class Subscription
 {
