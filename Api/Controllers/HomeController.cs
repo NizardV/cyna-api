@@ -46,12 +46,14 @@ public class HomeController : ControllerBase
         var carousel = await _cmsService.GetHomeCarouselAsync(locale);
         var missionText = await _cmsService.GetHomeMissionTextAsync(locale);
         var categories = await _cmsService.GetHomeCategoriesAsync(locale);
+        var topProducts = await _cmsService.GetHomeTopProductsAsync(locale);
 
         var response = new HomePageDto
         {
             CarouselSlides = carousel,
             MissionText = missionText,
-            Categories = categories
+            Categories = categories,
+            TopProducts = topProducts
         };
 
         return Ok(response);

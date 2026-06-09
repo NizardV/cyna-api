@@ -9,6 +9,7 @@ Ce document centralise l'architecture, le flux de données et l'état d'avanceme
 * **Paramètre** : `?locale=X` (type `LocaleLang` : `Fr = 0`, `En = 1`).
 * **Objectif** : Renvoyer l'intégralité des données de la Home en une seule requête HTTP pour optimiser le Front-End React.
 * **Configuration Swagger :** Pour supporter l'existence de DTOs homonymes dans des namespaces différents (ex: `Home.CategoryDto` vs `Catalog.CategoryDto`), Swagger a été configuré avec `CustomSchemaIds(type => type.FullName)` dans le `Program.cs`.
+* **Norme de nommage DTO :** Utilisation de DTOs basés sur la structure (ex: `ProductSummaryDto`) plutôt que sur le contexte (`TopProductDto`) pour maximiser la réutilisabilité de l'objet sur d'autres vues (ex: Nouveautés, Produits similaires).
 
 ---
 
@@ -34,6 +35,14 @@ Ce document centralise l'architecture, le flux de données et l'état d'avanceme
   * `Infrastructure > ICategoryRepository` : Extraction de la table `Categories` avec `.Include()` des traductions et tri SQL par `.OrderBy(c => c.DisplayOrder)`.
   * `Application > ICmsService` : Mappage vers le DTO allégé `CategoryDto` (sans propriétés de tri ou d'ID exposées).
   * `Api > HomeController` : Consolidation finale dans l'objet de réponse `HomePageDto`.
+  
+### 4. 🌟 Les Top Produits (Mis en avant)
+* **Statut** : Opérationnel ✅
+* **Flux Technique** :
+  * `Infrastructure > IProductRepository` : Requête complexe filtrant les produits actifs (`Status = Available`) et mis en avant (`IsFeatured = true`). Limitation aux 4 plus récents avec inclusion de la première image et des plans de tarification mensuels (`BillingPeriod.Monthly`).
+  * `Application > ICmsService` : Application de la logique métier. Calcul du prix d'appel "À partir de" (`StartingPrice`) en cherchant le prix minimum parmi les paliers (*Tiers*), et troncature de la description courte à 100 caractères maximum pour l'affichage web.
+  * `Application > Dto > Home > ProductSummaryDto` : DTO générique de résumé de carte produit.
+  * `Api > HomeController` : Ajout de la liste consolidée à la racine du `HomePageDto`.
 ---
 
 ## 🧪 Guide de Test (Swagger)

@@ -16,14 +16,16 @@ public class CmsService : ICmsService
     private readonly ILogger<CmsService> _logger;
     private readonly ISiteSettingRepository _siteSettingRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IProductRepository _productRepository;
 
 
-    public CmsService(ICarouselRepository carouselRepository, ILogger<CmsService> logger, ISiteSettingRepository siteSettingRepository, ICategoryRepository categoryRepository)
+    public CmsService(ICarouselRepository carouselRepository, ILogger<CmsService> logger, ISiteSettingRepository siteSettingRepository, ICategoryRepository categoryRepository, IProductRepository productRepository)
     {
         _carouselRepository = carouselRepository;
         _logger = logger;
         _siteSettingRepository = siteSettingRepository;
         _categoryRepository = categoryRepository;
+        _productRepository = productRepository;
     }
 
     /// <inheritdoc />
@@ -88,6 +90,48 @@ public class CmsService : ICmsService
                 ImageUrl = c.ImageUrl,
                 Name = translation?.Name,
                 Description = translation?.Description
+            };
+        });
+    }
+
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<ProductSummaryDto>> GetHomeTopProductsAsync(LocaleLang locale)
+    {
+        var products = await _productRepository.GetFeaturedProductsAsync(locale, 6);
+
+        if (!products.Any())
+        {
+            _logger.LogInformation("Aucun Top Produit n'a été trouvé pour la page d'accueil (Langue demandée : {Locale}).", locale);
+        }
+
+        return products.Select(p =>
+        {
+            var translation = p.Translations.FirstOrDefault();
+            var image = p.Images.FirstOrDefault();
+
+            // Logique Métier : Trouver le prix le plus bas parmi les Tiers du plan Mensuel
+            decimal? minPrice = p.PricingPlans
+                .SelectMany(plan => plan.PricingTiers)
+                .Select(tier => tier.PricePerUnit)
+                .DefaultIfEmpty()
+                .Min();
+
+            // Logique Métier : Créer une description courte (max 100 caractères)
+            string? shortDesc = translation?.Description;
+            if (!string.IsNullOrEmpty(shortDesc) && shortDesc.Length > 100)
+            {
+                shortDesc = shortDesc.Substring(0, 97) + "...";
+            }
+
+            return new ProductSummaryDto
+            {
+                Id = p.Id,
+                Slug = p.Slug,
+                Name = translation?.Name,
+                ShortDescription = shortDesc,
+                ImageUrl = image?.ImageUrl,
+                StartingPrice = minPrice == 0 ? null : minPrice // Si pas de prix, on renvoie null
             };
         });
     }

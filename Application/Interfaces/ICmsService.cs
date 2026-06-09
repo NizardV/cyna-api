@@ -27,4 +27,9 @@ public interface ICmsService
     /// Récupère la liste des catégories formatées pour la page d'accueil.
     /// </summary>
     Task<IEnumerable<CategoryDto>> GetHomeCategoriesAsync(LocaleLang locale);
+
+    /// <summary>
+    /// Récupère la liste des produits mis en avant.
+    /// </summary>
+    Task<IEnumerable<ProductSummaryDto>> GetHomeTopProductsAsync(LocaleLang locale);
 }

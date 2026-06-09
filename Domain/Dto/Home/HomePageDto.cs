@@ -19,4 +19,9 @@ public class HomePageDto
     /// Liste des catégories de produits à afficher sur la page d'accueil.
     /// </summary>
     public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
+
+    /// <summary>
+    /// Liste des top produits à afficher sur la page d'accueil.
+    /// </summary>
+    public IEnumerable<ProductSummaryDto> TopProducts { get; set; } = new List<ProductSummaryDto>();
 }
