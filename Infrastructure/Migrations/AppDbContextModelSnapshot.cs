@@ -17,7 +17,7 @@ namespace Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -75,7 +75,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.PaymentMethod", b =>
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.PaymentMethod", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -110,7 +110,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("PaymentMethods");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.EmailVerificationCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.EmailVerificationCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -134,7 +134,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("EmailVerificationCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.PasswordResetCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.PasswordResetCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -158,39 +158,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("PasswordResetCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.CartItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PricingPlanId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("QuantityDevices")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("QuantityUsers")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PricingPlanId");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CartItems");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Category", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -215,7 +183,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.CategoryTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.CategoryTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -243,7 +211,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("CategoryTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -270,7 +238,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("PricingPlans");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingTier", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingTier", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -298,7 +266,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("PricingTiers");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -337,7 +305,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductImage", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -361,7 +329,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("ProductImages");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -390,7 +358,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("ProductTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Company", b =>
+            modelBuilder.Entity("Domain.Entities.Company", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -406,7 +374,39 @@ namespace Infrastructure.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Invoice", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PricingPlanId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityDevices")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityUsers")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PricingPlanId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Invoice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -438,7 +438,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -476,7 +476,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.OrderItem", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -507,6 +507,12 @@ namespace Infrastructure.Migrations
                     b.Property<int>("QuantityUsers")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("UnitPriceDevices")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("UnitPriceUsers")
+                        .HasColumnType("decimal(10,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
@@ -518,7 +524,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -563,7 +569,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("Subscriptions");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlide", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlide", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -585,7 +591,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("CarouselSlides");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlideTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlideTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -614,7 +620,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("CarouselSlideTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -636,7 +642,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("ChatbotConversations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotMessage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -662,43 +668,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("ChatbotMessages");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ContactMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ContactMessages");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.OrderPromoCode", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.OrderPromoCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -722,7 +692,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("OrderPromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.PromoCode", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.PromoCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -750,7 +720,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("PromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSetting", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSetting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -769,7 +739,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("SiteSettings");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSettingTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSettingTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -793,7 +763,7 @@ namespace Infrastructure.Migrations
                     b.ToTable("SiteSettingTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -845,9 +815,45 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            modelBuilder.Entity("Infrastructure.Entities.PromoAndCms.ContactMessage", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ContactMessages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Addresses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -856,9 +862,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.PaymentMethod", b =>
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.PaymentMethod", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("PaymentMethods")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -867,9 +873,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.EmailVerificationCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.EmailVerificationCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("EmailVerificationCodes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -878,9 +884,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.PasswordResetCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.PasswordResetCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("PasswordResetCodes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -889,21 +895,87 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.CartItem", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.CategoryTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.Category", "Category")
+                        .WithMany("Translations")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("PricingPlans")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingTier", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
+                        .WithMany("PricingTiers")
+                        .HasForeignKey("PricingPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingPlan");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductImage", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductTranslation", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("Translations")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.CartItem", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("CartItems")
                         .HasForeignKey("PricingPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("CartItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("CartItems")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -916,75 +988,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.CategoryTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Invoice", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Category", "Category")
-                        .WithMany("Translations")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("PricingPlans")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingTier", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
-                        .WithMany("PricingTiers")
-                        .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PricingPlan");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Category", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductImage", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("Images")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductTranslation", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("Translations")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Invoice", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("Invoices")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -993,19 +999,19 @@ namespace Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.AddressAndPayment.Address", "BillingAddress")
+                    b.HasOne("Domain.Entities.AddressAndPayment.Address", "BillingAddress")
                         .WithMany("Orders")
                         .HasForeignKey("BillingAddressId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", "Subscription")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Subscription", "Subscription")
                         .WithMany("Orders")
                         .HasForeignKey("SubscriptionId");
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1018,21 +1024,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.OrderItem", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.OrderItem", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("OrderItems")
                         .HasForeignKey("PricingPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1045,21 +1051,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PricingPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("Subscriptions")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Subscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1072,9 +1078,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlideTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlideTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.CarouselSlide", "Slide")
+                    b.HasOne("Domain.Entities.PromoAndCms.CarouselSlide", "Slide")
                         .WithMany("Translations")
                         .HasForeignKey("SlideId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1083,18 +1089,18 @@ namespace Infrastructure.Migrations
                     b.Navigation("Slide");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("ChatbotConversations")
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotMessage", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.ChatbotConversation", "Conversation")
+                    b.HasOne("Domain.Entities.PromoAndCms.ChatbotConversation", "Conversation")
                         .WithMany("Messages")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1103,24 +1109,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Conversation");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ContactMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.OrderPromoCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
-                        .WithMany("ContactMessages")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.OrderPromoCode", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("PromoCodes")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.PromoCode", "PromoCode")
+                    b.HasOne("Domain.Entities.PromoAndCms.PromoCode", "PromoCode")
                         .WithMany("Orders")
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1131,9 +1128,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("PromoCode");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSettingTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSettingTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.SiteSetting", "Setting")
+                    b.HasOne("Domain.Entities.PromoAndCms.SiteSetting", "Setting")
                         .WithMany("Translations")
                         .HasForeignKey("SettingId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1142,28 +1139,37 @@ namespace Infrastructure.Migrations
                     b.Navigation("Setting");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Company", "Company")
+                    b.HasOne("Domain.Entities.Company", "Company")
                         .WithMany("Users")
                         .HasForeignKey("CompanyId");
 
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            modelBuilder.Entity("Infrastructure.Entities.PromoAndCms.ContactMessage", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("ContactMessages")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Category", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Category", b =>
                 {
                     b.Navigation("Products");
 
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
                 {
                     b.Navigation("CartItems");
 
@@ -1174,7 +1180,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("Subscriptions");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
                 {
                     b.Navigation("CartItems");
 
@@ -1189,12 +1195,12 @@ namespace Infrastructure.Migrations
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Company", b =>
+            modelBuilder.Entity("Domain.Entities.Company", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
                     b.Navigation("Invoices");
 
@@ -1203,32 +1209,32 @@ namespace Infrastructure.Migrations
                     b.Navigation("PromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlide", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlide", b =>
                 {
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.PromoCode", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.PromoCode", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSetting", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSetting", b =>
                 {
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Navigation("Addresses");
 

@@ -29,11 +29,4 @@ public interface ICatalogRepository
         int page,
         int pageSize,
         string locale);
-
-    /// <summary>
-    /// Récupère toutes les catégories disponibles avec leurs traductions.
-    /// </summary>
-    /// <param name="locale">Langue des traductions à inclure.</param>
-    /// <returns>La liste des catégories.</returns>
-    Task<IEnumerable<Category>> GetCategoriesAsync(string locale);
 }
