@@ -8,3 +8,7 @@ riderModule.iml
 /vs/
 /.vs/
 **.db
+*.db-shm
+*.db-wal
+*.db-journal
+/Api/Api.csproj.user.Backup.tmp
