@@ -41,16 +41,6 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowViteDevServer", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();  // needed to send cookies/auth headers
-    });
-});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
@@ -146,6 +136,7 @@ builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
 builder.Services.AddScoped<ICartRepository,         CartRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
@@ -154,7 +145,7 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
-
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 // --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
 builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
@@ -195,7 +186,6 @@ if (!app.Environment.IsProduction())
 app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
-app.UseCors("AllowViteDevServer");
 
 app.UseAuthentication();
 app.UseAuthorization();

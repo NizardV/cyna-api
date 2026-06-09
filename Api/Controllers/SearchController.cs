@@ -14,25 +14,25 @@ using ILogger = NLog.ILogger;
 /// Expose les routes publiques de recherche, filtrage et récupération des catégories.
 /// </summary>
 [ApiController]
-[Route("recherche")]
+[Route("Search")]
 [Produces("application/json")]
-public class RechercheController : ControllerBase
+public class SearchController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ICatalogService _catalogService;
 
     /// <summary>
-    /// Initialise une nouvelle instance de <see cref="RechercheController"/>.
+    /// Initialise une nouvelle instance de <see cref="SearchController"/>.
     /// </summary>
     /// <param name="catalogService">Le service catalogue.</param>
-    public RechercheController(ICatalogService catalogService)
+    public SearchController(ICatalogService catalogService)
     {
         _catalogService = catalogService;
     }
 
     // -------------------------------------------------------------------------
-    // GET /recherche
+    // GET /Search
     // -------------------------------------------------------------------------
 
     /// <summary>
