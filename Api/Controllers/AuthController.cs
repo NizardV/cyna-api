@@ -22,7 +22,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var result = await _authService.LoginAsync(request);
-
         return result.Success ? Ok(result) : Unauthorized(result);
     }
 
@@ -30,13 +29,11 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
         var result = await _authService.RegisterAsync(request);
-        return result.Success
-            ? Ok(new { message = "Compte créé avec succès. Un e-mail de confirmation va vous être envoyé." })
-            : BadRequest(result);
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> ResetToken([FromBody] RefreshTokenRequestDto request)
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto request)
     {
         var result = await _authService.ResetTokenAsync(request);
         return result == null ? BadRequest(new { message = "Impossible de générer un nouveau token." }) : Ok(result);
@@ -46,10 +43,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
     {
         var success = await _authService.LogoutAsync(request.RefreshToken);
-        if (!success)
-            return BadRequest(new { message = "Token invalide." });
-
-        return Ok(new { message = "Déconnexion réussie." });
+        return success ? Ok(new { message = "Déconnexion réussie." }) : BadRequest(new { message = "Token invalide." });
     }
 
 }
