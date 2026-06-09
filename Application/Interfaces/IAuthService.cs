@@ -1,10 +1,11 @@
-﻿using Application.Dtos;
+﻿using Domain.Dto.User;
 
 namespace Application.Interfaces;
 
 public interface IAuthService
 {
-    Task<LoginResultDto?> LoginAsync(LoginRequestDto request);
-    Task<bool> RegisterAsync(RegisterRequestDto request);
-    Task<LoginResultDto?> ResetTokenAsync(ResetTokenRequestDto request);
+    Task<AuthResultDto?> LoginAsync(LoginRequestDto request);
+    Task<AuthResultDto> RegisterAsync(RegisterRequestDto request);
+    Task<AuthResultDto?> ResetTokenAsync(RefreshTokenRequestDto request);
+    Task<bool> LogoutAsync(string refreshToken);
 }

@@ -37,6 +37,9 @@ public class User
     public int? CompanyId { get; set; }
     public Company? Company { get; set; }
 
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
     public ICollection<EmailVerificationCode> EmailVerificationCodes { get; set; } = [];
     public ICollection<PasswordResetCode> PasswordResetCodes { get; set; } = [];
     public ICollection<Address> Addresses { get; set; } = [];
