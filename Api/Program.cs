@@ -137,6 +137,18 @@ try
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
                 ClockSkew = TimeSpan.Zero
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var token = context.Request.Cookies["cyna_token"];
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
     builder.Services.AddAuthorization();
@@ -200,11 +212,24 @@ try
         }
     }
 
-    app.UseCors("Frontend");
-    app.UseCookiePolicy();
+    // Middleware ordonnées correctement (ordre à respecter pour que les cookies fonctionnent)
+
+    // 1. Redirection HTTP vers HTTPS
     app.UseHttpsRedirection();
+
+    // 2. Gestion du CORS (Indispensable pour le proxy Vite)
+    app.UseCors("Frontend");
+
+    // 3. Application de la politique des cookies
+    app.UseCookiePolicy();
+
+    // 4. Authentification (Extrait les tokens/cookies)
     app.UseAuthentication();
+
+    // 5. Autorisation (Vérifie les accès [Authorize])
     app.UseAuthorization();
+
+    // 6. Mapping des routes
     app.MapControllers();
 
     app.Run();

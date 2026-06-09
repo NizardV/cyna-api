@@ -1,7 +1,10 @@
 ﻿namespace Api.Controllers;
 
 using Application.Interfaces;
+
 using Domain.Dto.User;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -88,6 +91,29 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Déconnexion réussie." });
     }
 
+    [Authorize] // Obligatoire : l'utilisateur doit avoir un cookie valide
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        // On extrait les claims qu'on a configurés dans le JwtTokenGenerator
+        var userIdClaim = User.FindFirst("id")?.Value;
+        var firstNameClaim = User.FindFirst("firstName")?.Value;
+        var lastNameClaim = User.FindFirst("lastName")?.Value;
+        var emailClaim = User.FindFirst("email")?.Value;
+        var roleClaim = User.FindFirst("role")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+        return Ok(new
+        {
+            Id = userIdClaim,
+            FirstName = firstNameClaim,
+            LastName = lastNameClaim,
+            Email = emailClaim,
+            Role = roleClaim
+        });
+    }
+
     // ---------------------------------------------------------------------------
     // HELPERS PRIVÉS POUR SÉCURISER LES COOKIES
     // ---------------------------------------------------------------------------
@@ -103,10 +129,10 @@ public class AuthController : ControllerBase
     {
         return new CookieOptions
         {
-            HttpOnly = true,             // EMPÊCHE LE VOL DE TOKEN PAR FAILLE XSS (JavaScript ne peut pas le lire)
-            Secure = true,               // Uniquement transmis en HTTPS (indispensable pour ton port local 7169)
-            SameSite = SameSiteMode.None, // Requis en cross-origin local (React :5173 vs API :7169). Devra être mis à SameSiteMode.Strict en prod s'ils partagent le même nom de domaine.
-            Path = "/",
+            HttpOnly = true,                    
+            Secure = false,
+            SameSite = SameSiteMode.Strict, 
+            Path = "/",                  
             Expires = expired ? DateTime.UtcNow.AddDays(-1) : null
         };
     }

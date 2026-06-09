@@ -17,8 +17,8 @@ public class JwtCurrentUserService : ICurrentUserService
     {
         get
         {
-            var claim = _httpContextAccessor.HttpContext?.User
-                .FindFirst(ClaimTypes.NameIdentifier);
+            var claim = _httpContextAccessor.HttpContext?.User.FindFirst("id")
+                             ?? _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
 
             if (claim == null || !int.TryParse(claim.Value, out var id))
                 throw new UnauthorizedAccessException("Identifiant utilisateur introuvable dans le token.");
