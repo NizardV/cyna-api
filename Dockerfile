@@ -1,43 +1,43 @@
-# ── Stage 1 : build ──────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# Stage 1 : Build
+# ─────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY Tools/Tools.csproj                   Tools/
-COPY Domain/Domain.csproj                 Domain/
-COPY Application/Application.csproj       Application/
-COPY Infrastructure/Infrastructure.csproj Infrastructure/
-COPY Api/Api.csproj                       Api/
+# Copie des .csproj pour layer-cache NuGet restore
+COPY Api/Api.csproj                               Api/
+COPY Api.IntegrationTests/Api.IntegrationTests.csproj Api.IntegrationTests/
+COPY Application/Application.csproj               Application/
+COPY Domain/Domain.csproj                         Domain/
+COPY Infrastructure/Infrastructure.csproj         Infrastructure/
+COPY UnitTests/UnitTests.csproj                   UnitTests/
+COPY Tools/Tools.csproj                           Tools/
+COPY CynaApi.sln                                  ./
 
-RUN dotnet restore Api/Api.csproj
+RUN dotnet restore CynaApi.sln
 
-COPY Tools/        Tools/
-COPY Domain/       Domain/
-COPY Application/  Application/
-COPY Infrastructure/ Infrastructure/
-COPY Api/          Api/
+# Copie du reste du code source
+COPY . .
 
-WORKDIR /src/Api
-RUN dotnet publish Api.csproj \
+# Publish de l'API en Release
+RUN dotnet publish Api/Api.csproj \
     -c Release \
     -o /app/publish \
-    /p:UseAppHost=false
+    --no-restore
 
-# ── Stage 2 : runtime ────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
-
+# ─────────────────────────────────────────────
+# Stage 2 : Runtime
+# ─────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# Create data dir and give ownership to the non-root app user before switching
-RUN mkdir -p /app/data && chown -R $APP_UID /app/data
+# Utilisation de l'utilisateur non-root par défaut de .NET
+USER app
 
 COPY --from=build /app/publish .
 
-VOLUME ["/app/data"]
-
+# Port exposé (ASP.NET Core écoute sur 8080 par convention dans les conteneurs)
 ENV ASPNETCORE_URLS=http://+:8080
-
-USER $APP_UID
-
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "Api.dll"]

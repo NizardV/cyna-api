@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using System.Text;
 
 using Api.Interceptors;
@@ -15,7 +11,17 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
+using Api.Security;
+
+using Application.Interfaces.Services;
+
 using Infrastructure.Security;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 using NLog;
 using NLog.Web;
@@ -24,6 +30,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 logger.Debug("init main");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
 
 builder.Services.AddControllers();
 builder.Services.AddCors(options =>
@@ -71,8 +86,28 @@ var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
 
 builder.Services.AddSingleton<EfSlowQueryInterceptor>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
-    options.UseSqlite(connectionString).AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>()));
+{
+    // Ajoute l'intercepteur commun
+    options.AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>());
+
+    // Si on est en local (Development), on peut rester sur SQLite
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        // En Staging et Production (sur OVH), on utilise PostgreSQL
+        options.UseNpgsql(connectionString);
+    }
+
+    // Fix: décalage de version EF tools (10.0.7) vs runtime (10.0.8)
+    options.ConfigureWarnings(warnings =>
+        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+});
 
 // Jwt options
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
@@ -110,16 +145,22 @@ builder.Services.AddScoped<IUserRepository,         UserRepository>();
 builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICartRepository,         CartRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
 builder.Services.AddScoped<IOrderService,        OrderService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<IAuthService,         AuthService>();
+builder.Services.AddScoped<ICartService,         CartService>();
 
 
-// Hasher de mot de passe
-builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
+builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+
+// Générateur de Token JWT
+builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -150,6 +191,8 @@ if (!app.Environment.IsProduction())
         app.MapScalarApiReference();
     }
 }
+
+app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 app.UseCors("AllowViteDevServer");
