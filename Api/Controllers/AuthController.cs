@@ -1,9 +1,10 @@
-﻿using Application.Dtos;
+﻿namespace Api.Controllers;
+
 using Application.Interfaces;
 
-using Microsoft.AspNetCore.Mvc;
+using Domain.Dto.User;
 
-namespace Api.Controllers;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("auth")]
@@ -22,33 +23,33 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginAsync(request);
 
-        if (!result.Success)
-        {
-            return Unauthorized(result);
-        }
-
-        return Ok(result);
+        return result.Success ? Ok(result) : Unauthorized(result);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
-        var success = await _authService.RegisterAsync(request);
-        if (!success)
-        {
-            return BadRequest(new { message = "Cet email est déjà utilisé." });
-        }
-        return Ok(new { message = "Compte créé avec succès. Un e-mail de confirmation va vous être envoyé." });
+        var result = await _authService.RegisterAsync(request);
+        return result.Success
+            ? Ok(new { message = "Compte créé avec succès. Un e-mail de confirmation va vous être envoyé." })
+            : BadRequest(result);
     }
 
-    [HttpPost("reset-token")]
-    public async Task<IActionResult> ResetToken([FromBody] ResetTokenRequestDto request)
+    [HttpPost("refresh")]
+    public async Task<IActionResult> ResetToken([FromBody] RefreshTokenRequestDto request)
     {
         var result = await _authService.ResetTokenAsync(request);
-        if (result == null)
-        {
-            return BadRequest(new { message = "Impossible de générer un nouveau token." });
-        }
-        return Ok(result);
+        return result == null ? BadRequest(new { message = "Impossible de générer un nouveau token." }) : Ok(result);
     }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
+    {
+        var success = await _authService.LogoutAsync(request.RefreshToken);
+        if (!success)
+            return BadRequest(new { message = "Token invalide." });
+
+        return Ok(new { message = "Déconnexion réussie." });
+    }
+
 }

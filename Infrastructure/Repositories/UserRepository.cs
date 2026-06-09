@@ -1,13 +1,12 @@
+namespace Infrastructure.Repositories;
+
 using Infrastructure.Data;
-using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 
-namespace Infrastructure.Repositories;
-
 using Domain.Entities;
 
-using Interfaces;
+using Infrastructure.Interfaces;
 
 /// <summary>
 /// Implémentation du dépôt utilisateur via Entity Framework Core.
@@ -38,11 +37,28 @@ public class UserRepository : IUserRepository
     }
 
     /// <inheritdoc />
-    public async Task UpdateProfileAsync(User user)
+    public async Task<User?> GetByEmailAsync(string email)
     {
-        _logger.Debug("Mise à jour du profil de l'utilisateur ID {UserId}", user.Id);
+        _logger.Debug("Récupération de l'utilisateur avec l'email {Email}", email);
+        return await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == email);
+    }
 
-        _context.Users.Update(user);
+    /// <inheritdoc />
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    {
+        _logger.Debug("Récupération de l'utilisateur avec le refresh token {RefreshToken}", refreshToken);
+        return await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+    }
+
+    /// <inheritdoc />
+    public async Task AddAsync(User user)
+    {
+        _logger.Debug("Ajout d'un nouvel utilisateur avec l'email {Email}", user.Email);
+        await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
     }
 
@@ -54,5 +70,13 @@ public class UserRepository : IUserRepository
         await _context.Users
             .Where(u => u.Id == userId)
             .ExecuteUpdateAsync(u => u.SetProperty(x => x.PasswordHash, newPasswordHash));
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateAsync(User user)
+    {
+        _logger.Debug("Mise à jour de l'utilisateur ID {UserId}", user.Id);
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
     }
 }

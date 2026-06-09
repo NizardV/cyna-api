@@ -1,7 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Application.Dtos
+﻿namespace Domain.Dto.User
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class LoginRequestDto
     {
         [Required]

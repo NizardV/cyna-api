@@ -16,10 +16,31 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(int userId);
 
     /// <summary>
-    /// Met à jour le profil (prénom, nom, email) d'un utilisateur.
+    /// Récupère un utilisateur par son email
     /// </summary>
-    /// <param name="user">L'entité utilisateur avec les nouvelles valeurs.</param>
-    Task UpdateProfileAsync(User user);
+    /// <param name="email"></param>
+    /// <returns></returns>
+    Task<User?> GetByEmailAsync(string email);
+
+    /// <summary>
+    /// Récupère un utilisateur par son refresh token
+    /// </summary>
+    /// <param name="refreshToken"></param>
+    /// <returns></returns>
+    Task<User?> GetByRefreshTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// Ajoute un nouvel utilisateur à la base de données.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    Task AddAsync(User user);
+    /// <summary>
+    /// Met à jour les informations d'un utilisateur dans la base de données.
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    Task UpdateAsync(User user);
 
     /// <summary>
     /// Met à jour le hash du mot de passe d'un utilisateur.
@@ -27,4 +48,5 @@ public interface IUserRepository
     /// <param name="userId">L'identifiant de l'utilisateur.</param>
     /// <param name="newPasswordHash">Le nouveau hash de mot de passe.</param>
     Task UpdatePasswordAsync(int userId, string newPasswordHash);
+
 }
