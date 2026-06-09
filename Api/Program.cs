@@ -26,6 +26,7 @@ using Microsoft.OpenApi;
 using NLog;
 using NLog.Web;
 
+
 var builder = WebApplication.CreateBuilder(args);
 // Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
@@ -170,7 +171,7 @@ builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
 // Hasher de mot de passe
-builder.Services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
