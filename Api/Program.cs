@@ -34,6 +34,12 @@ try
     var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
     logger.Debug("init main");
 
+    builder.Services.Configure<CookiePolicyOptions>(options =>
+    {
+        options.CheckConsentNeeded = context => false;
+        options.MinimumSameSitePolicy = SameSiteMode.None;
+    });
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("Frontend", policy => policy
@@ -58,7 +64,7 @@ try
         // GESTION DES CONFLITS DE NOMS DE DTO (Ex: Home.CategoryDto vs Catalog.CategoryDto)
         options.CustomSchemaIds(type => type.FullName);
 
-        // D�finition du sch�ma d�authentification Bearer
+        // Définition du schéma d'authentification Bearer
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             Name = "Authorization",
@@ -70,10 +76,10 @@ try
             BearerFormat = "JWT"
         });
 
-        // Exigence de s�curit� � NOUVELLE SYNTAXE .NET 10 / Swashbuckle 10
+        // Exigence de sécurité à NOUVELLE SYNTAXE .NET 10 / Swashbuckle 10
         options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
         {
-            // La cl� doit utiliser **exactement** le m�me nom que dans AddSecurityDefinition
+            // La clé doit utiliser **exactement** le même nom que dans AddSecurityDefinition
             [new OpenApiSecuritySchemeReference("Bearer", document)] = []
         });
     });
@@ -135,7 +141,7 @@ try
 
     builder.Services.AddAuthorization();
 
-    // DI m�tiers
+    // DI métiers
     // --- Dépôts (Infrastructure → Domain) ---
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IOrderRepository, OrderRepository>();
@@ -195,6 +201,7 @@ try
     }
 
     app.UseCors("Frontend");
+    app.UseCookiePolicy();
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();
