@@ -9,6 +9,7 @@ public class CategoryTranslationDto
 {
     /// <summary>Locale : "fr" ou "en".</summary>
     [Required]
+    [RegularExpression("^(fr|en)$", ErrorMessage = "La locale doit être 'fr' ou 'en'.")]
     public string Locale { get; set; } = "fr";
 
     /// <summary>Nom traduit de la catégorie.</summary>

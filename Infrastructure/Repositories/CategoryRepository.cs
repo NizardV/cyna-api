@@ -25,11 +25,11 @@ public class CategoryRepository : ICategoryRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Category>> GetCategoriesAsync(string locale)
+    public async Task<IEnumerable<Category>> GetCategoriesAsync(LocaleLang locale)
     {
         _logger.Debug("Récupération des catégories pour la locale {Locale}", locale);
 
-        var localeEnum = locale.ToLower() == "en" ? LocaleLang.En : LocaleLang.Fr;
+        var localeEnum = locale;
 
         return await _context.Categories
             .AsNoTracking()

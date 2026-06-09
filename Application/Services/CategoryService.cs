@@ -31,26 +31,37 @@ public class CategoryService : ICategoryService
     // Helpers de mapping
     // -------------------------------------------------------------------------
 
-    private static CategoryDto ToDto(Category c) => new()
+    private static CategoryDto ToDto(Category c)
     {
-        Id           = c.Id,
-        Slug         = c.Slug,
-        Name         = c.Translations.FirstOrDefault()?.Name ?? c.Slug,
-        Description  = c.Translations.FirstOrDefault()?.Description,
-        ImageUrl     = c.ImageUrl,
-        DisplayOrder = c.DisplayOrder,
-        ProductCount = c.Products?.Count ?? 0,
-    };
+        // Resolve flat name/description: fr first, then first available
+        var frTr = c.Translations.FirstOrDefault(t => t.Locale == LocaleLang.Fr)
+                ?? c.Translations.FirstOrDefault();
 
-    private static LocaleLang ParseLocale(string locale) =>
-        locale.ToLower() == "en" ? LocaleLang.En : LocaleLang.Fr;
+        return new CategoryDto
+        {
+            Id           = c.Id,
+            Slug         = c.Slug,
+            Name         = frTr?.Name        ?? c.Slug,
+            Description  = frTr?.Description,
+            ImageUrl     = c.ImageUrl,
+            DisplayOrder = c.DisplayOrder,
+            ProductCount = c.Products?.Count ?? 0,
+            // ── All translations for the edit dialog ──
+            Translations = c.Translations.Select(t => new CategoryTranslationDto
+            {
+                Locale      = t.Locale == LocaleLang.En ? "en" : "fr",
+                Name        = t.Name,
+                Description = t.Description,
+            }).ToList(),
+        };
+    }
 
     // -------------------------------------------------------------------------
     // Lecture
     // -------------------------------------------------------------------------
 
     /// <inheritdoc />
-    public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(string locale)
+    public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(LocaleLang locale)
     {
         _logger.Info("Récupération des catégories pour la locale {Locale}", locale);
 
@@ -67,6 +78,12 @@ public class CategoryService : ICategoryService
                 Description  = translation?.Description,
                 ImageUrl     = c.ImageUrl,
                 DisplayOrder = c.DisplayOrder,
+                Translations = c.Translations.Select(t => new CategoryTranslationDto
+                {
+                    Locale      = t.Locale == LocaleLang.En ? "en" : "fr",
+                    Name        = t.Name,
+                    Description = t.Description,
+                }).ToList(),
             };
         });
     }
@@ -105,13 +122,11 @@ public class CategoryService : ICategoryService
     /// <inheritdoc />
     public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
     {
-        // Génération du slug depuis la première traduction si absent
         var firstName = dto.Translations.FirstOrDefault()?.Name ?? "categorie";
         var slug = string.IsNullOrWhiteSpace(dto.Slug)
             ? GenerateSlug(firstName)
             : dto.Slug.Trim().ToLower();
 
-        // Unicité du slug
         if (await _repo.SlugExistsAsync(slug))
             throw new InvalidOperationException($"Le slug « {slug} » est déjà utilisé.");
 
@@ -140,11 +155,9 @@ public class CategoryService : ICategoryService
     /// <inheritdoc />
     public async Task<CategoryDto?> UpdateAsync(int id, UpdateCategoryDto dto)
     {
-        // On récupère l'entité trackée (sans AsNoTracking ici)
         var category = await _repo.GetByIdAsync(id);
         if (category is null) return null;
 
-        // Slug
         if (dto.Slug is not null)
         {
             var slug = dto.Slug.Trim().ToLower();
@@ -153,10 +166,9 @@ public class CategoryService : ICategoryService
             category.Slug = slug;
         }
 
-        if (dto.ImageUrl is not null)     category.ImageUrl     = dto.ImageUrl;
-        if (dto.DisplayOrder.HasValue)    category.DisplayOrder = dto.DisplayOrder.Value;
+        if (dto.ImageUrl is not null)  category.ImageUrl     = dto.ImageUrl;
+        if (dto.DisplayOrder.HasValue) category.DisplayOrder = dto.DisplayOrder.Value;
 
-        // Translations — remplacement complet si fournies
         if (dto.Translations is not null)
         {
             category.Translations = dto.Translations.Select(t => new CategoryTranslation
@@ -191,6 +203,16 @@ public class CategoryService : ICategoryService
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Converts the locale string coming from a DTO ("fr" | "en") into a
+    /// <see cref="LocaleLang"/> enum value.
+    /// The controller already validated the string, so no fallback is needed.
+    /// </summary>
+    internal static LocaleLang ParseLocale(string locale) =>
+        locale.Equals("en", StringComparison.OrdinalIgnoreCase)
+            ? LocaleLang.En
+            : LocaleLang.Fr;
 
     private static string GenerateSlug(string name)
     {

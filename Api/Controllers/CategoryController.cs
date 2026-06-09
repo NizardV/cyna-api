@@ -7,6 +7,8 @@ using Application.Interfaces;
 
 using Domain.Dto.Category;
 
+using Tools;
+
 using ILogger = NLog.ILogger;
 
 /// <summary>
@@ -28,6 +30,27 @@ public class AdminCategoryController : ControllerBase
         _service = service;
     }
 
+    /// <summary>
+    /// Validates every <see cref="CategoryTranslationDto"/> inside a payload.
+    /// Returns an error message on the first violation, or <c>null</c> if valid.
+    /// </summary>
+    private static string? ValidateTranslationLocales(IEnumerable<CategoryTranslationDto>? translations)
+    {
+        if (translations is null) return null;
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var t in translations)
+        {
+            if (i18n.ParseLocale(t.Locale) is null)
+                return $"Locale inconnue « {t.Locale} ». Valeurs acceptées : fr, en.";
+
+            if (!seen.Add(t.Locale.ToLower()))
+                return $"La locale « {t.Locale} » est présente plusieurs fois.";
+        }
+        return null;
+    }
+
+
     // -------------------------------------------------------------------------
     // GET /categories
     // -------------------------------------------------------------------------
@@ -38,13 +61,18 @@ public class AdminCategoryController : ControllerBase
     /// <param name="locale">Langue des traductions : fr | en (défaut : fr).</param>
     /// <returns>La liste des catégories triées par ordre d'affichage.</returns>
     /// <response code="200">Catégories récupérées avec succès.</response>
+    /// <response code="400">Locale inconnue.</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<CategoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCategories([FromQuery] string locale = "fr")
     {
+        if (i18n.ParseLocale(locale) is not { } parsedLocale)
+            return BadRequest(new { error = $"Locale inconnue « {locale} ». Valeurs acceptées : fr, en." });
+
         _logger.Info("GET /categories — locale={Locale}", locale);
 
-        var categories = await _service.GetCategoriesAsync(locale);
+        var categories = await _service.GetCategoriesAsync(parsedLocale);
         return Ok(categories);
     }
 
@@ -74,8 +102,12 @@ public class AdminCategoryController : ControllerBase
         if (page < 1)
             return BadRequest(new { error = "Le numéro de page doit être supérieur ou égal à 1." });
 
-        if (pageSize < 1 || pageSize > 100)
+        if (pageSize is < 1 or > 100)
             return BadRequest(new { error = "La taille de page doit être comprise entre 1 et 100." });
+
+        var validSortValues = new[] { "displayOrder", "name", "name_desc", "productCount" };
+        if (!validSortValues.Contains(sortBy))
+            return BadRequest(new { error = $"Valeur de tri inconnue « {sortBy} ». Valeurs acceptées : {string.Join(", ", validSortValues)}." });
 
         _logger.Info("GET /categories/search — q={Q}, page={Page}, sortBy={SortBy}", q, page, sortBy);
 
@@ -110,7 +142,7 @@ public class AdminCategoryController : ControllerBase
     /// <summary>Crée une nouvelle catégorie.</summary>
     /// <param name="dto">Données de la catégorie à créer.</param>
     /// <response code="201">Catégorie créée avec succès.</response>
-    /// <response code="400">Données invalides ou slug déjà utilisé.</response>
+    /// <response code="400">Données invalides, locale inconnue ou slug déjà utilisé.</response>
     [HttpPost]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -118,6 +150,9 @@ public class AdminCategoryController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
+
+        if (ValidateTranslationLocales(dto.Translations) is { } localeError)
+            return BadRequest(new { error = localeError });
 
         _logger.Info("POST /categories");
 
@@ -140,7 +175,7 @@ public class AdminCategoryController : ControllerBase
     /// <param name="id">Identifiant de la catégorie.</param>
     /// <param name="dto">Champs à mettre à jour (seuls les champs non-null sont appliqués).</param>
     /// <response code="200">Catégorie mise à jour.</response>
-    /// <response code="400">Données invalides ou slug déjà utilisé.</response>
+    /// <response code="400">Données invalides, locale inconnue ou slug déjà utilisé.</response>
     /// <response code="404">Catégorie introuvable.</response>
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
@@ -150,6 +185,9 @@ public class AdminCategoryController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
+
+        if (ValidateTranslationLocales(dto.Translations) is { } localeError)
+            return BadRequest(new { error = localeError });
 
         _logger.Info("PUT /categories/{Id}", id);
 

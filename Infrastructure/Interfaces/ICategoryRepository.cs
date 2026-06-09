@@ -2,6 +2,8 @@ namespace Infrastructure.Interfaces;
 
 using Domain.Entities.Catalogue;
 
+using Entities;
+
 /// <summary>
 /// Interface du dépôt de gestion des catégories.
 /// Couvre les opérations CRUD et la liste paginée avec filtres.
@@ -13,7 +15,7 @@ public interface ICategoryRepository
     /// </summary>
     /// <param name="locale">Langue des traductions à inclure.</param>
     /// <returns>La liste des catégories.</returns>
-    Task<IEnumerable<Category>> GetCategoriesAsync(string locale);
+    Task<IEnumerable<Category>> GetCategoriesAsync(LocaleLang locale);
 
     /// <summary>
     /// Récupère les catégories avec filtres, tri et pagination.
