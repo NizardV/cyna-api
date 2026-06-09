@@ -1,23 +1,29 @@
-using Application.Interfaces;
-
-using Microsoft.AspNetCore.Http;
-
-using Tools;
-
 namespace Api.Security;
 
-/// <summary>
-/// Implémentation JWT — lit l'userId depuis les claims du token.
-/// Activer dans Program.cs quand l'auth sera fonctionnelle.
-/// </summary>
+using System.Security.Claims;
+
+using Application.Interfaces;
+
 public class JwtCurrentUserService : ICurrentUserService
 {
-    private readonly IHttpContextAccessor _http;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public JwtCurrentUserService(IHttpContextAccessor http)
+    public JwtCurrentUserService(IHttpContextAccessor httpContextAccessor)
     {
-        _http = http;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public int UserId => ClaimsHelper.GetUserId(_http.HttpContext!.User);
+    public int UserId
+    {
+        get
+        {
+            var claim = _httpContextAccessor.HttpContext?.User
+                .FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim == null || !int.TryParse(claim.Value, out var id))
+                throw new UnauthorizedAccessException("Identifiant utilisateur introuvable dans le token.");
+
+            return id;
+        }
+    }
 }

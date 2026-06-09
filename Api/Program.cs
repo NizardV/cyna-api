@@ -155,8 +155,8 @@ builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
 builder.Services.AddScoped<ICmsService, CmsService>();
 
-// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
-builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+// --- Auth utilisateur ---
+builder.Services.AddHttpContextAccessor();
 
 // Générateur de Token JWT
 builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
