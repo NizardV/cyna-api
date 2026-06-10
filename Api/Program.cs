@@ -26,6 +26,10 @@ using Microsoft.OpenApi;
 using NLog;
 using NLog.Web;
 
+using Resend;
+
+using Tools;
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -152,6 +156,15 @@ try
         });
 
     builder.Services.AddAuthorization();
+
+    builder.Services.AddOptions();
+    builder.Services.AddHttpClient<ResendClient>();
+    builder.Services.Configure<ResendClientOptions>(o =>
+    {
+        o.ApiToken = builder.Configuration["Resend:ApiKey"]!;
+    });
+    builder.Services.AddTransient<IResend, ResendClient>();
+    builder.Services.AddTransient<EmailHelper>();
 
     // DI métiers
     // --- Dépôts (Infrastructure → Domain) ---

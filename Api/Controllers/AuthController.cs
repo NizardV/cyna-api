@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
+using Tools;
+
 [ApiController]
 [Route("auth")]
 [Produces("application/json")]
