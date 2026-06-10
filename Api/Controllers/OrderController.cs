@@ -9,6 +9,10 @@ namespace Api.Controllers;
 
 using Domain.Dto.Orders;
 
+using Microsoft.AspNetCore.Authorization;
+
+using Tools;
+
 using ILogger = NLog.ILogger;
 
 [ApiController]
@@ -30,7 +34,7 @@ public class OrderController : ControllerBase
     // -------------------------------------------------------------------------
     // POST /orders
     // -------------------------------------------------------------------------
-
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(CreateOrderResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,7 +43,7 @@ public class OrderController : ControllerBase
     {
         try
         {
-            var userId = _currentUser.UserId;
+            var userId = ClaimsHelper.GetUserId(User);
             _logger.Info("POST /orders — userId={UserId}", userId);
 
             var result = await _orderService.CreateOrderAsync(userId, dto);

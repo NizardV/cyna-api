@@ -9,6 +9,10 @@ namespace Api.Controllers;
 
 using Domain.Dto.Cart;
 
+using Microsoft.AspNetCore.Authorization;
+
+using Tools;
+
 using ILogger = NLog.ILogger;
 
 [ApiController]
@@ -30,7 +34,7 @@ public class CartController : ControllerBase
     // -------------------------------------------------------------------------
     // POST /cart
     // -------------------------------------------------------------------------
-
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(CartResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,7 +43,7 @@ public class CartController : ControllerBase
     {
         try
         {
-            var userId = _currentUser.UserId;
+            var userId = ClaimsHelper.GetUserId(User);
             _logger.Info("POST /cart — userId={UserId}, planId={PlanId}", userId, dto.PricingPlanId);
 
             var result = await _cartService.AddOrUpdateCartItemAsync(userId, dto);
