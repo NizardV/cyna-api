@@ -50,6 +50,7 @@ try
     });
 
     builder.Services.AddControllers();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddSwaggerGen(options =>
@@ -174,6 +175,8 @@ try
     builder.Services.AddScoped<ICartService, CartService>();
     builder.Services.AddScoped<ICmsService, CmsService>();
 
+builder.Services.AddScoped<IProductService, ProductService>();
+
     // --- Auth utilisateur ---
     builder.Services.AddHttpContextAccessor();
 
@@ -219,7 +222,6 @@ try
 
     // 2. Gestion du CORS (Indispensable pour le proxy Vite)
     app.UseCors("Frontend");
-
     // 3. Application de la politique des cookies
     app.UseCookiePolicy();
 
