@@ -18,16 +18,21 @@ variables:
 
 stages:
 - stage: CI
-  displayName: 'CI — Build, Test, Push'
+  displayName: 'CI — Build, Test, Push [ $(envName) ]'
   jobs:
   - job: Build
     steps:
+
+    # ── 1. .NET SDK ────────────────────────────────────────────────
     - task: UseDotNet@2
+      displayName: 'Use .NET SDK 10.x'
       inputs:
         packageType: 'sdk'
         version: '10.x'
 
+    # ── 2. SonarCloud ──────────────────────────────────────────────
     - task: SonarCloudPrepare@3
+      displayName: 'SonarCloud : Prepare'
       inputs:
         SonarCloud: 'SonarCloud-CYNA'
         organization: '2028di1p5g3'
@@ -48,6 +53,7 @@ stages:
         projects: 'CynaApi.sln'
         arguments: '--configuration Release --no-restore'
 
+    # ── 3. Tests unitaires ─────────────────────────────────────────
     - task: DotNetCoreCLI@2
       displayName: 'dotnet test'
       inputs:
@@ -57,23 +63,27 @@ stages:
       continueOnError: true
 
     - task: SonarCloudAnalyze@3
+      displayName: 'SonarCloud : Analyze'
 
+    # ── 4. Login GHCR ──────────────────────────────────────────────
     - task: Docker@2
       displayName: 'Login GHCR'
       inputs:
         command: login
         containerRegistry: 'GHCR-Cyna-Connection'
 
+    # ── 5. Build image ─────────────────────────────────────────────
     - script: |
         docker build \
           -t $(FULL_IMAGE):$(envName) \
           -t $(FULL_IMAGE):sha-$(Build.SourceVersion) \
           -t $(FULL_IMAGE):build-$(Build.BuildId) \
           .
-      displayName: 'Docker Build'
+      displayName: 'Docker Build [ $(envName) ]'
 
+    # ── 6. Push → GHCR ─────────────────────────────────────────────
     - script: |
         docker push $(FULL_IMAGE):$(envName)
         docker push $(FULL_IMAGE):sha-$(Build.SourceVersion)
         docker push $(FULL_IMAGE):build-$(Build.BuildId)
-      displayName: 'Docker Push → GHCR'
+      displayName: 'Docker Push → GHCR [ $(envName) ]'
