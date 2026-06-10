@@ -1,9 +1,9 @@
-trigger: none  # Déclenché uniquement par le CI
+trigger: none
 
 resources:
   pipelines:
-  - pipeline: ci-api
-    source: 'Cyna-Api CI'        # Nom exact du pipeline CI dans Azure DevOps
+  - pipeline: 'ci-api'
+    source: 'Cyna-Api CI'
     trigger:
       branches:
         include: [ "main", "dev" ]
@@ -15,37 +15,43 @@ variables:
   - group: 'GHCR'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-      - name: envName
-        value: 'prod'
-      - name: targetEnv
-        value: 'PROD'
-      - name: API_PORT
-        value: '4000'
-      - name: ASPNETCORE_ENV
-        value: 'Production'
-  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
-      - name: envName
-        value: 'staging'
-      - name: targetEnv
-        value: 'DEV'
-      - name: API_PORT
-        value: '4001'
-      - name: ASPNETCORE_ENV
-        value: 'Staging'
+  # On récupère la branche brute sans logique complexe ici
+  - name: RAW_BRANCH
+    value: $(resources.pipeline['ci-api'].sourceBranch)
 
 stages:
 - stage: CD_Cloud
-  displayName: 'CD Cloud — Deploy OVH [ $(envName) ]'
+  displayName: 'CD Cloud — Deploy OVH'
   jobs:
   - deployment: Deploy
-    environment: $(targetEnv)
+    # On cible un environnement générique ou déterminé par une variable d'exécution
+    environment: 'OVH-Cloud'
     strategy:
       runOnce:
         deploy:
           steps:
+          # ── STEP 1 : Calcul des variables en Bash ──
+          - bash: |
+              # Extraction du nom de la branche (ex: refs/heads/main -> main)
+              BRANCH_NAME=$(echo "$(RAW_BRANCH)" | sed 's|refs/heads/||')
+              echo "Pipeline déclenché par la branche : $BRANCH_NAME"
+              
+              if [ "$BRANCH_NAME" = "main" ]; then
+                echo "##vso[task.setvariable variable=envName]prod"
+                echo "##vso[task.setvariable variable=targetEnv]PROD"
+                echo "##vso[task.setvariable variable=API_PORT]4000"
+                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
+              else
+                echo "##vso[task.setvariable variable=envName]staging"
+                echo "##vso[task.setvariable variable=targetEnv]DEV"
+                echo "##vso[task.setvariable variable=API_PORT]4001"
+                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
+              fi
+            displayName: 'Calcul dynamique de l’environnement cible'
+
+          # ── STEP 2 : Déploiement SSH ──
           - task: SSH@0
-            displayName: 'Deploy API sur OVH'
+            displayName: 'Deploy API sur OVH via Docker Compose'
             inputs:
               sshEndpoint: 'OVH-SSH-Connection'
               runOptions: 'inline'
@@ -53,23 +59,22 @@ stages:
               inline: |
                 echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
 
-                # On se place dans le dossier contenant l'infra sur ton VPS OVH
                 cd ~/cyna-infra
                 git pull origin main
                 cd docker-compose/
 
-                echo "─── Pull de l'image de l'API ───"
+                echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
                   docker compose -f docker-compose.$(envName).yml pull api
 
-                echo "─── Relance du conteneur API ───"
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
                   docker compose -f docker-compose.$(envName).yml up -d --no-build --force-recreate
 
+          # ── STEP 3 : Health check ──
           - task: SSH@0
             displayName: 'Health check post-deploy'
             inputs:
