@@ -17,7 +17,9 @@ variables:
     value: 'ghcr.io/nizardv/cyna-api'
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
       - name: envName
-        value: 'production'
+        value: 'prod'
+      - name: targetEnv
+        value: 'PROD'
       - name: API_PORT
         value: '4000'
       - name: ASPNETCORE_ENV
@@ -25,6 +27,8 @@ variables:
   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
       - name: envName
         value: 'staging'
+      - name: targetEnv
+        value: 'DEV'
       - name: API_PORT
         value: '4001'
       - name: ASPNETCORE_ENV
@@ -35,7 +39,7 @@ stages:
   displayName: 'CD Cloud — Deploy OVH [ $(envName) ]'
   jobs:
   - deployment: Deploy
-    environment: ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}PROD${{ else }}DEV${{ end }}
+    environment: $(targetEnv)
     strategy:
       runOnce:
         deploy:
@@ -49,17 +53,22 @@ stages:
               inline: |
                 echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
 
-                cd ~/cyna-api
+                # On se place dans le dossier contenant l'infra sur ton VPS OVH
+                cd ~/cyna-infra
+                git pull origin main
+                cd docker-compose/
 
+                echo "─── Pull de l'image de l'API ───"
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose pull api
+                  docker compose -f docker-compose.$(envName).yml pull api
 
+                echo "─── Relance du conteneur API ───"
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose up -d --no-build --force-recreate
+                  docker compose -f docker-compose.$(envName).yml up -d --no-build --force-recreate
 
           - task: SSH@0
             displayName: 'Health check post-deploy'
