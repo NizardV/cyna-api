@@ -46,4 +46,46 @@ public class ProductRepository : IProductRepository
                 .ThenInclude(pp => pp.PricingTiers.OrderBy(t => t.minQuantity))
             .FirstOrDefaultAsync(p => p.Id == id);
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Product>> GetSimilarProductsAsync(int currentProductId, LocaleLang locale)
+    {
+        // 1. On cherche la catégorie du produit actuel
+        var currentCategoryId = await _context.Products
+            .Where(p => p.Id == currentProductId)
+            .Select(p => p.CategoryId)
+            .FirstOrDefaultAsync();
+
+        if (currentCategoryId == 0) return new List<Product>();
+
+        // 2. Requête de base allégée (Sans les Pricing Plans)
+        var baseQuery = _context.Products
+            .AsNoTracking()
+            .Where(p => p.Id != currentProductId)
+            .Include(p => p.Translations.Where(t => t.Locale == locale))
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1))
+            .Include(p => p.PricingPlans)
+            .ThenInclude(pp => pp.PricingTiers);
+
+        // 3. Exécution standardisée (Compatible avec toutes les bases de données)
+        var similarProducts = await baseQuery
+            .Where(p => p.CategoryId == currentCategoryId)
+            .OrderByDescending(p => p.Status == ProductStatus.Available)
+            .Take(6)
+            .ToListAsync();
+
+        // 4. Fallback si on a moins de 6 produits
+        if (similarProducts.Count < 6)
+        {
+            var fallbackProducts = await baseQuery
+                .Where(p => p.CategoryId != currentCategoryId)
+                .OrderByDescending(p => p.Status == ProductStatus.Available)
+                .Take(6 - similarProducts.Count)
+                .ToListAsync();
+
+            similarProducts.AddRange(fallbackProducts);
+        }
+
+        return similarProducts;
+    }
 }

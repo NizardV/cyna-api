@@ -1,13 +1,16 @@
-# Documentation Évolutive - Page Détail Produit (Route `/Product/{id}`)
+# Documentation Évolutive - Page Détail Produit & Recommandations
 
-Ce document détaille l'architecture et le flux de données pour la récupération des informations complètes d'un produit (Page Produit).
+Ce document détaille l'architecture et le flux de données pour la page Produit, qui se divise en deux requêtes distinctes pour optimiser le chargement Front-End (Lazy Loading) :
+1. **Les détails complets** : `GET /Product/{id}`
+2. **Les recommandations (Similaires)** : `GET /Product/{id}/similar`
 
 ---
 
 ## 📌 Architecture & Philosophie (Domain-Driven Design)
-* **Route** : `GET /Product/{id}?locale=X` (gérée par le `ProductController`).
+
 * **Découplage strict** : La page produit possède son propre écosystème de DTOs dans le dossier `Domain/Dto/Product`. **Aucun DTO du Catalogue n'est réutilisé ici.**
-* **Objectif** : Fournir au Front-End une vue profonde et complète d'un produit unique (spécifications techniques, galerie d'images, grilles tarifaires détaillées par paliers) en une seule requête optimisée.
+* **Objectifs de la route Détails (`/{id}`)** : Fournir au Front-End une vue profonde et complète d'un produit unique (spécifications techniques, galerie d'images, grilles tarifaires détaillées par paliers) en une seule requête optimisée.
+* **Objectifs de la route Similaires (`/{id}/similar`)** : Fournir 6 cartes de produits allégées. Le format de sortie a été rigoureusement aligné sur le mock Front-End (propriétés aplaties, status en minuscules) pour garantir une intégration "Plug & Play" sans surcharger la bande passante (zéro sur-chargement / *over-fetching*).
 
 ---
 
@@ -15,33 +18,43 @@ Ce document détaille l'architecture et le flux de données pour la récupérati
 
 ### 1. Le Contrôleur (`ProductController`)
 * **Rôle** : Point d'entrée HTTP.
-* **Comportement** : Intercepte l'ID et la langue (par défaut : `fr`). Renvoie une erreur `404 Not Found` si le produit n'existe pas ou n'est pas actif, sinon renvoie un statut `200 OK` avec l'arbre JSON complet.
+* **`GET /{id}`** : Intercepte l'ID. Renvoie `404 Not Found` si introuvable, sinon `200 OK` avec l'arbre JSON complet.
+* **`GET /{id}/similar`** : Renvoie les recommandations. Si aucun produit similaire n'est trouvé, renvoie un tableau vide `[]` (`200 OK`) plutôt qu'une erreur `404`, respectant ainsi les conventions REST pour les listes.
 
 ### 2. Le Service (`ProductService`)
-* **Rôle** : Orchestration et Mappage (LINQ-to-Objects).
-* **Particularité** : C'est ici que les entités de base de données sont transformées en DTOs.
-* **Point d'attention sur les `.ToList()`** : Les `.ToList()` sont utilisés intentionnellement à la fin des `.Select()` imbriqués pour **matérialiser** les listes en mémoire (RAM) et éviter l'exécution différée (Lazy Evaluation) lors de la sérialisation JSON finale.
+* **Rôle** : Orchestration, Mappage (LINQ-to-Objects) et logique métier de présentation.
+* **Logique Détails** : Matérialise les listes complexes en mémoire via `.ToList()` pour sécuriser la sérialisation JSON finale.
+* **Logique Similaires** : 
+  * Calcule le prix d'appel (`Price`) en cherchant la valeur unitaire (`PricePerUnit`) la plus basse à travers tous les paliers disponibles.
+  * Applique une troncature intelligente sur la description (100 caractères max).
+  * Formate le statut (ex: `Active` devient `available`) pour correspondre aux attentes strictes du Front-End.
 
 ### 3. Le Repository (`ProductRepository`)
-* **Rôle** : Requêtage SQL via Entity Framework Core.
-* **Optimisation** : Utilisation stricte de `.AsNoTracking()` pour des performances maximales en lecture seule.
-* **Jointures (`Include`)** : La requête charge un arbre relationnel profond en une seule fois :
-  * Les traductions du produit (filtrées par langue).
-  * La catégorie parente et sa traduction (pour le fil d'ariane).
-  * Les images (triées par `DisplayOrder`).
-  * Les plans tarifaires (`PricingPlans`) avec leurs paliers respectifs (`PricingTiers` triés par quantité minimum).
+* **Rôle** : Requêtage SQL via Entity Framework Core avec optimisation `.AsNoTracking()`.
+* **Requête Détails** : Charge un arbre relationnel profond (Traductions, Catégorie, Images, PricingPlans, PricingTiers).
+* **Requête Similaires (Algorithme de Fallback)** :
+  1. Identifie la catégorie du produit source.
+  2. Tente de récupérer 6 produits de cette **même catégorie**, triés par disponibilité (`Available` en priorité).
+  3. **Plan de secours (Fallback)** : S'il y a moins de 6 produits dans cette catégorie, le Repository effectue une seconde sélection sur les **autres catégories** pour combler le vide exact (ex: `Take(6 - count)`).
+  * *Note de conception* : Le tri aléatoire a été volontairement écarté de la couche SQL pour garantir une compatibilité universelle et des performances maximales entre SQLite (Dev) et PostgreSQL (Prod), sans charger de données inutiles en RAM.
 
 ---
 
 ## 📦 Structure des Données (Les DTOs)
 
-Le Front-End reçoit un objet racine `ProductDetailsDto` structuré en "poupées russes" pour faciliter le rendu visuel :
+### 1. DTO Principal : `ProductDetailsDto` (Route `/{id}`)
+Objet racine structuré en "poupées russes" :
+* **Base** : `Id`, `Slug`, `Name`, `Description`, `TechnicalSpecs`, `Status`.
+* **`Category`** (`ProductCategoryDto`) : Informations légères pour le fil d'ariane (Breadcrumb).
+* **`Images`** (`IEnumerable<string>`) : Tableau d'URLs pour le carrousel.
+* **`PricingPlans`** (`IEnumerable<ProductPricingPlanDto>`) : Les onglets de tarification (Mensuel, Annuel).
+  * ↳ **`PricingTiers`** (`IEnumerable<ProductPricingTierDto>`) : Les paliers dégressifs pour générer les tableaux de prix au Front.
 
-1. **Informations de base** : `Id`, `Slug`, `Name`, `Description`, `TechnicalSpecs`, `Status`.
-2. **`Category`** (`ProductCategoryDto`) : Informations légères pour générer le fil d'ariane (Breadcrumb).
-3. **`Images`** (`IEnumerable<string>`) : Tableau simple d'URLs pour le carrousel/galerie de la page.
-4. **`PricingPlans`** (`IEnumerable<ProductPricingPlanDto>`) : Contient les différents onglets de prix (ex: Mensuel, Annuel).
-   * ↳ **`PricingTiers`** (`IEnumerable<ProductPricingTierDto>`) : Imbriqués dans chaque plan, ces objets permettent au Front-End de dessiner facilement les tableaux de prix dégressifs (ex: de 1 à 10 utilisateurs, de 11 à 50, etc.).
+### 2. DTO Secondaire : `ProductSimilarDto` (Route `/{id}/similar`)
+Objet "plat" et ultra-léger pour l'affichage de cartes :
+* `Id`, `Slug`, `Name`, `Description` (tronquée), `Status` (minuscules).
+* `ImageUrl` (Une seule image, la principale).
+* `Price` (Le prix d'appel le plus bas trouvé dans l'arbre tarifaire).
 
 ---
 
@@ -49,6 +62,8 @@ Le Front-End reçoit un objet racine `ProductDetailsDto` structuré en "poupées
 
 1. Lancer l'API en environnement de développement (le `--seed` génère les produits).
 2. Ouvrir l'outil de documentation web (Scalar ou Swagger).
-3. (Optionnel) Exécuter la route `GET /Home` pour repérer un `id` de produit valide dans le bloc `topProducts`.
-4. Exécuter la route `GET /Product/{id}` avec un ID existant (ex: `1`, `2`...).
-5. Vérifier la présence de l'arbre tarifaire (`pricingPlans` > `pricingTiers`) dans la réponse JSON.
+3. **Tester les détails** : Exécuter la route `GET /Product/{id}` avec un ID existant (ex: `1`). Vérifier la présence de l'arbre tarifaire complet (`pricingPlans` > `pricingTiers`).
+4. **Tester les recommandations** : Exécuter la route `GET /Product/{id}/similar` avec le même ID. 
+   * Vérifier que le tableau contient exactement 6 produits.
+   * Vérifier que le produit source (ID `1`) n'est pas présent dans la liste.
+   * Vérifier la présence d'un prix unique `price` et d'une description courte.

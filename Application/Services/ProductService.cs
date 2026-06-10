@@ -74,4 +74,43 @@ public class ProductService : IProductService
             }).ToList()
         };
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<ProductSimilarDto>> GetSimilarProductsAsync(int currentProductId, LocaleLang locale)
+    {
+        _logger.LogInformation("Récupération des produits similaires pour le produit Id={Id} (Locale: {Locale})", currentProductId, locale);
+
+        var products = await _productRepository.GetSimilarProductsAsync(currentProductId, locale);
+
+        return products.Select(p =>
+        {
+            var translation = p.Translations.FirstOrDefault();
+            var image = p.Images.FirstOrDefault();
+
+            //On fouille dans tous les paliers de tous les plans pour trouver le prix unitaire le plus bas
+            decimal? price = p.PricingPlans
+                .SelectMany(plan => plan.PricingTiers)
+                .Select(tier => (decimal?)tier.PricePerUnit)
+                .DefaultIfEmpty()
+                .Min();
+
+            // Troncature de la description à 100 caractères max
+            string desc = translation?.Description ?? string.Empty;
+            if (desc.Length > 100)
+            {
+                desc = desc.Substring(0, 97) + "...";
+            }
+
+            return new ProductSimilarDto
+            {
+                Id = p.Id,
+                Slug = p.Slug,
+                Name = translation?.Name ?? p.Slug,
+                Description = desc, 
+                Status = p.Status.ToString().ToLower(), 
+                ImageUrl = image?.ImageUrl,
+                Price = price == 0 ? null : price
+            };
+        }).ToList();
+    }
 }

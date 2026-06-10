@@ -34,4 +34,17 @@ public class ProductController : ControllerBase
 
         return Ok(product);
     }
+
+    /// <summary>
+    /// Récupère 6 produits similaires (même catégorie en priorité, disponibles en priorité, aléatoires).
+    /// </summary>
+    [HttpGet("{id}/similar")]
+    public async Task<ActionResult<IEnumerable<ProductSimilarDto>>> GetSimilarProducts(int id, [FromQuery] LocaleLang locale = LocaleLang.Fr)
+    {
+        var similarProducts = await _productService.GetSimilarProductsAsync(id, locale);
+
+        // Même s'il n'y a pas de produits similaires, on renvoie un tableau vide (200 OK)
+        // C'est une meilleure pratique que de renvoyer une 404 pour une liste annexe.
+        return Ok(similarProducts);
+    }
 }

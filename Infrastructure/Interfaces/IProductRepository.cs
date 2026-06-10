@@ -16,4 +16,9 @@ public interface IProductRepository
     /// </summary>
     Task<Product?> GetProductDetailsByIdAsync(int id, LocaleLang locale);
 
+    /// <summary>
+    /// Récupère une liste de services SaaS similaires (Même catégorie et disponibles en priorité, triés aléatoirement).
+    /// </summary>
+    Task<IEnumerable<Product>> GetSimilarProductsAsync(int currentProductId, LocaleLang locale);
+
 }
