@@ -28,8 +28,12 @@ public class JwtTokenGenerator : ITokenGenerator
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-            new Claim(ClaimTypes.Role, user.Role.GetEnumDescription())};
+            new Claim("id", user.Id.ToString()),
+            new Claim("firstName", user.FirstName ?? string.Empty),
+            new Claim("lastName", user.LastName ?? string.Empty),
+            new Claim("email", user.Email ?? string.Empty),
+            new Claim("role", user.Role.GetEnumDescription())
+        };
 
         var token = new JwtSecurityToken(
             issuer: _options.Issuer,
