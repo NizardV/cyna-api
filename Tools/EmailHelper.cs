@@ -11,7 +11,7 @@ public class EmailHelper
     public EmailHelper(IResend resend, IConfiguration configuration)
     {
         _resend = resend;
-        _defaultFrom = configuration["Resend:From"] ?? "onboarding@cyna-diiage.com";
+        _defaultFrom = configuration["Resend:From"] ?? "no-reply@projet-cyna.fr";
     }
 
     public async Task<Guid> SendAsync(
