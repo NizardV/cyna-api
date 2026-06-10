@@ -88,4 +88,86 @@ public class ProductRepository : IProductRepository
 
         return similarProducts;
     }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Product>> GetAllForAdminAsync()
+    {
+        return await _context.Products
+            .AsNoTracking()
+            .Include(p => p.Translations)
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Product?> GetAdminDetailsByIdAsync(int id)
+    {
+        return await _context.Products
+            .AsNoTracking()
+            .Include(p => p.Translations)
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.PricingPlans)
+                .ThenInclude(pp => pp.PricingTiers.OrderBy(t => t.minQuantity))
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    /// <inheritdoc />
+    public async Task<Product?> GetEditableByIdAsync(int id)
+    {
+        return await _context.Products
+            .Include(p => p.Translations)
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.PricingPlans)
+                .ThenInclude(pp => pp.PricingTiers)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    /// <inheritdoc />
+    public async Task<Product> AddAsync(Product product)
+    {
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+        return product;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteAsync(Product product)
+    {
+        _context.Products.Remove(product);
+        await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> SlugExistsAsync(string slug, int? excludeProductId = null)
+    {
+        return await _context.Products
+            .AnyAsync(p => p.Slug == slug && (excludeProductId == null || p.Id != excludeProductId));
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> CategoryExistsAsync(int categoryId)
+    {
+        return await _context.Categories.AnyAsync(c => c.Id == categoryId);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> HasOrderOrSubscriptionReferencesAsync(int productId)
+    {
+        return await _context.OrderItems.AnyAsync(oi => oi.ProductId == productId)
+            || await _context.Subscriptions.AnyAsync(s => s.ProductId == productId);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> PlanHasOrderOrSubscriptionReferencesAsync(int pricingPlanId)
+    {
+        return await _context.OrderItems.AnyAsync(oi => oi.PricingPlanId == pricingPlanId)
+            || await _context.Subscriptions.AnyAsync(s => s.PricingPlanId == pricingPlanId);
+    }
 }

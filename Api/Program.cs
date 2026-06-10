@@ -136,7 +136,9 @@ try
                 ValidIssuer = jwtConfig.Issuer,
                 ValidAudience = jwtConfig.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+                // Le token émis par JwtTokenGenerator porte le rôle dans un claim "role"
+                RoleClaimType = "role"
             };
             options.Events = new JwtBearerEvents
             {
@@ -152,7 +154,12 @@ try
             };
         });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        // Les valeurs correspondent aux descriptions de l'enum UserRole émises dans le claim "role"
+        options.AddPolicy("AdminOnly", policy =>
+            policy.RequireRole("Administrateur", "Super Administrateur"));
+    });
 
     // DI métiers
     // --- Dépôts (Infrastructure → Domain) ---
@@ -243,3 +250,8 @@ catch (Exception ex)
     logger.Fatal(ex, "Application failed to start");
     throw;
 }
+
+/// <summary>
+/// Déclaration partielle pour exposer le point d'entrée aux tests d'intégration (WebApplicationFactory).
+/// </summary>
+public partial class Program;
