@@ -23,12 +23,10 @@ public class CartController : ControllerBase
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ICartService        _cartService;
-    private readonly ICurrentUserService _currentUser;
 
-    public CartController(ICartService cartService, ICurrentUserService currentUser)
+    public CartController(ICartService cartService)
     {
         _cartService = cartService;
-        _currentUser = currentUser;
     }
 
     // -------------------------------------------------------------------------

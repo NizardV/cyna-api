@@ -23,12 +23,10 @@ public class OrderController : ControllerBase
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly IOrderService       _orderService;
-    private readonly ICurrentUserService _currentUser;
 
-    public OrderController(IOrderService orderService, ICurrentUserService currentUser)
+    public OrderController(IOrderService orderService)
     {
         _orderService = orderService;
-        _currentUser  = currentUser;
     }
 
     // -------------------------------------------------------------------------
