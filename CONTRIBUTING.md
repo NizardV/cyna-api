@@ -19,7 +19,7 @@ git clone https://2028DI1P5G3@dev.azure.com/2028DI1P5G3/DIIAGE%202028%20DI1%20P5
 La structure attendue est :
 
 ```
-DIIAGE1/
+<dossier-parent>/
 ├── Cyna-Api/
 └── Cyna-Infra/
 ```
