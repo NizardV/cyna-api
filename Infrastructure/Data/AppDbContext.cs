@@ -86,5 +86,25 @@ public class AppDbContext : DbContext
         mb.Entity<Order>()
             .HasOne(o => o.Subscription).WithMany(s => s.Orders)
             .HasForeignKey(o => o.SubscriptionId).IsRequired(false);
+
+        // ── Protection de l'historique de commandes/abonnements ──────────
+        // Sans cette configuration, EF applique Cascade sur les FK requises :
+        // supprimer un produit effacerait silencieusement les lignes de
+        // commandes et les abonnements associés.
+        mb.Entity<OrderItem>()
+            .HasOne(oi => oi.Product).WithMany(p => p.OrderItems)
+            .HasForeignKey(oi => oi.ProductId).OnDelete(DeleteBehavior.Restrict);
+
+        mb.Entity<OrderItem>()
+            .HasOne(oi => oi.PricingPlan).WithMany(pp => pp.OrderItems)
+            .HasForeignKey(oi => oi.PricingPlanId).OnDelete(DeleteBehavior.Restrict);
+
+        mb.Entity<Subscription>()
+            .HasOne(s => s.Product).WithMany(p => p.Subscriptions)
+            .HasForeignKey(s => s.ProductId).OnDelete(DeleteBehavior.Restrict);
+
+        mb.Entity<Subscription>()
+            .HasOne(s => s.PricingPlan).WithMany(pp => pp.Subscriptions)
+            .HasForeignKey(s => s.PricingPlanId).OnDelete(DeleteBehavior.Restrict);
     }
 }

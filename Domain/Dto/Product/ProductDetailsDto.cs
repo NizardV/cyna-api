@@ -9,7 +9,7 @@ public class ProductDetailsDto
     public string Slug { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string? TechnicalSpecs { get; set; }
+    public IEnumerable<string> TechnicalSpecs { get; set; } = [];
     public string Status { get; set; } = string.Empty;
 
     public ProductCategoryDto Category { get; set; } = null!;
