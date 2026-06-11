@@ -122,18 +122,4 @@ public class CatalogRepository : ICatalogRepository
 
         return (items, total);
     }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<Category>> GetCategoriesAsync(string locale)
-    {
-        _logger.Debug("Récupération des catégories pour la locale {Locale}", locale);
-
-        var localeEnum = locale.ToLower() == "en" ? LocaleLang.En : LocaleLang.Fr;
-
-        return await _context.Categories
-            .AsNoTracking()
-            .Include(c => c.Translations.Where(t => t.Locale == localeEnum))
-            .OrderBy(c => c.DisplayOrder)
-            .ToListAsync();
-    }
 }

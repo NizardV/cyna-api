@@ -160,27 +160,27 @@ try
             policy.RequireRole("Administrateur", "Super Administrateur"));
     });
 
-    // DI métiers
-    // --- Dépôts (Infrastructure → Domain) ---
-    builder.Services.AddScoped<IUserRepository, UserRepository>();
-    builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-    builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-    builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
-    builder.Services.AddScoped<ICartRepository, CartRepository>();
-    builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
-    builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
-    builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-    builder.Services.AddScoped<IProductRepository, ProductRepository>();
+// DI m�tiers
+// --- Dépôts (Infrastructure → Domain) ---
+builder.Services.AddScoped<IUserRepository,         UserRepository>();
+builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICartRepository,         CartRepository>();
+builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
+builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-    // --- Services (Application) ---
-    builder.Services.AddScoped<IUserService, UserService>();
-    builder.Services.AddScoped<IOrderService, OrderService>();
-    builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
-    builder.Services.AddScoped<ICatalogService, CatalogService>();
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<ICartService, CartService>();
-    builder.Services.AddScoped<ICmsService, CmsService>();
-
+// --- Services (Application) ---
+builder.Services.AddScoped<IUserService,         UserService>();
+builder.Services.AddScoped<IOrderService,        OrderService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<IAuthService,         AuthService>();
+builder.Services.AddScoped<ICartService,         CartService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICmsService, CmsService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
     // --- Auth utilisateur ---
