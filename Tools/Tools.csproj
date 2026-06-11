@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.10" />
+      <PackageReference Include="Resend" Version="0.5.1" />
     </ItemGroup>
 
 </Project>

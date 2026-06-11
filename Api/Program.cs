@@ -25,6 +25,10 @@ using Microsoft.OpenApi;
 using NLog;
 using NLog.Web;
 
+using Resend;
+
+using Tools;
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -181,6 +185,15 @@ try
         options.AddPolicy("AdminOnly", policy =>
             policy.RequireRole("Administrateur", "Super Administrateur"));
     });
+
+    builder.Services.AddOptions();
+    builder.Services.AddHttpClient<ResendClient>();
+    builder.Services.Configure<ResendClientOptions>(o =>
+    {
+        o.ApiToken = builder.Configuration["Resend:ApiKey"]!;
+    });
+    builder.Services.AddTransient<IResend, ResendClient>();
+    builder.Services.AddTransient<EmailHelper>();
 
 // DI m�tiers
 // --- Dépôts (Infrastructure → Domain) ---
