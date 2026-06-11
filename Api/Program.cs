@@ -41,11 +41,33 @@ try
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("Frontend", policy => policy
-            .WithOrigins("http://localhost:5173", "https://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials());
+        options.AddPolicy("Frontend", policy =>
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                policy
+                    .WithOrigins("http://localhost:5173", "https://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+            else if (builder.Environment.IsStaging())
+            {
+                policy
+                    .WithOrigins("https://staging.projet-cyna.fr")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+            else // Production
+            {
+                policy
+                    .WithOrigins("https://projet-cyna.fr", "https://www.projet-cyna.fr")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+        });
     });
 
     builder.Services.AddControllers();
@@ -189,7 +211,8 @@ builder.Services.AddScoped<IProductService, ProductService>();
     // Générateur de Token JWT
     builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
-    // Hasher de mot de passe
+    // Health checks
+    builder.Services.AddHealthChecks();
 
     var app = builder.Build();
     using (var scope = app.Services.CreateScope())
@@ -219,7 +242,15 @@ builder.Services.AddScoped<IProductService, ProductService>();
         {
             app.MapScalarApiReference();
         }
+
+        app.MapGet("/", () => Results.Redirect(
+        apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase)
+            ? "/swagger"
+            : "/scalar/v1"
+        ));
     }
+
+    app.MapHealthChecks("/health");
 
     // Middleware ordonnées correctement (ordre à respecter pour que les cookies fonctionnent)
 
