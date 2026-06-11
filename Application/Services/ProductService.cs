@@ -69,14 +69,16 @@ public class ProductService : IProductService
             {
                 Id = pp.Id,
                 Name = pp.Name,
-                BillingPeriod = pp.BillingPeriod.ToString(),
+                BillingPeriod = pp.BillingPeriod.ToString().ToLowerInvariant(),
                 DiscountPercent = pp.DiscountPercent,
+                MaxUsersCheckout = pp.MaxUsersCheckout,
+                MaxDevicesCheckout = pp.MaxDevicesCheckout,
                 PricingTiers = pp.PricingTiers.Select(t => new ProductPricingTierDto
                 {
-                    UnitType = t.unitType.ToString(),
-                    MinQuantity = t.minQuantity,
-                    MaxQuantity = t.maxQuantity,
-                    PricePerUnit = t.PricePerUnit
+                    UnitType = t.unitType.ToString().ToLowerInvariant(),
+                    MinQty = t.minQuantity,
+                    MaxQty = t.maxQuantity,
+                    UnitPrice = t.PricePerUnit
                 }).ToList()
             }).ToList()
         };

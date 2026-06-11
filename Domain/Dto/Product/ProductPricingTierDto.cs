@@ -6,7 +6,7 @@
 public class ProductPricingTierDto
 {
     public string UnitType { get; set; } = string.Empty;
-    public int MinQuantity { get; set; }
-    public int MaxQuantity { get; set; }
-    public decimal PricePerUnit { get; set; }
+    public int MinQty { get; set; }
+    public int MaxQty { get; set; }
+    public decimal UnitPrice { get; set; }
 }

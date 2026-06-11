@@ -9,6 +9,8 @@ public class ProductPricingPlanDto
     public string Name { get; set; } = string.Empty;
     public string BillingPeriod { get; set; } = string.Empty;
     public int DiscountPercent { get; set; }
+    public int MaxUsersCheckout { get; set; }
+    public int MaxDevicesCheckout { get; set; }
     public IEnumerable<ProductPricingTierDto> PricingTiers { get; set; } = [];
 }
 
