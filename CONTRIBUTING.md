@@ -1,21 +1,38 @@
-## Premier clone
-
-Après avoir cloné le repo, crée ton fichier de config local :
-
-```bash
-cp Api/appsettings.Development.json.example Api/appsettings.Development.json
-```
-
-Ce fichier est gitignored — chaque dev a le sien. Il configure SQLite par défaut, tu peux le modifier pour switcher sur Postgres (voir section dédiée).
-
----
-
 # Contribuer à Cyna API
 
 ## Prérequis
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+---
+
+## Premier clone
+
+Cloner les deux repos dans le même dossier parent :
+
+```bash
+git clone https://2028DI1P5G3@dev.azure.com/2028DI1P5G3/DIIAGE%202028%20DI1%20P5%20G3/_git/Cyna-Api
+git clone https://2028DI1P5G3@dev.azure.com/2028DI1P5G3/DIIAGE%202028%20DI1%20P5%20G3/_git/Cyna-Infra
+```
+
+La structure attendue est :
+
+```
+DIIAGE1/
+├── Cyna-Api/
+└── Cyna-Infra/
+```
+
+> Le docker-compose local utilise un chemin relatif `../Cyna-Infra/...` — les deux repos doivent être côte à côte.
+
+Ensuite, crée ton fichier de config local :
+
+```bash
+cp Api/appsettings.Development.json.example Api/appsettings.Development.json
+```
+
+Ce fichier est gitignored — chaque dev a le sien. Il configure SQLite par défaut, tu peux le modifier pour switcher sur Postgres (voir section dédiée).
 
 ---
 
@@ -43,7 +60,7 @@ L'API démarre sur `https://localhost:7169` et crée automatiquement `CynaApi.db
 **1. Lancer Postgres via Docker**
 
 ```bash
-docker compose -f ../cyna-infra/docker-compose/docker-compose.localdb.yml up -d
+docker compose -f ../Cyna-Infra/docker-compose/docker-compose.localdb.yml up -d
 ```
 
 **2. Configurer l'API**
@@ -85,13 +102,13 @@ dotnet run --project Api -- --seed
 ### Arrêter Postgres
 
 ```bash
-docker compose -f ../cyna-infra/docker-compose/docker-compose.localdb.yml down
+docker compose -f ../Cyna-Infra/docker-compose/docker-compose.localdb.yml down
 ```
 
 Pour supprimer aussi les données :
 
 ```bash
-docker compose -f ../cyna-infra/docker-compose/docker-compose.localdb.yml down -v
+docker compose -f ../Cyna-Infra/docker-compose/docker-compose.localdb.yml down -v
 ```
 
 ---
