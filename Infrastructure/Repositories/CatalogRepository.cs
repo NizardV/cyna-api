@@ -1,7 +1,7 @@
 using Infrastructure.Data;
-using Infrastructure.Entities;
 
 using Microsoft.EntityFrameworkCore;
+
 using NLog;
 
 namespace Infrastructure.Repositories;
@@ -9,6 +9,8 @@ namespace Infrastructure.Repositories;
 using Domain.Entities.Catalogue;
 
 using Interfaces;
+
+using Tools;
 
 /// <summary>
 /// Implémentation du dépôt catalogue via Entity Framework Core.

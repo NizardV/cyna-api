@@ -3,6 +3,8 @@ namespace Application.Interfaces;
 using Domain.Dto.Category;
 using Infrastructure.Entities;
 
+using Tools;
+
 /// <summary>
 /// Interface du service des catégories.
 /// </summary>

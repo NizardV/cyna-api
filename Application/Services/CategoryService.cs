@@ -10,6 +10,8 @@ using Infrastructure.Interfaces;
 
 using Interfaces;
 
+using Tools;
+
 /// <summary>
 /// Service des catégories.
 /// Orchestre le CRUD, la pagination et le mapping vers les DTOs.

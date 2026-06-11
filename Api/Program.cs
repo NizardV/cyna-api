@@ -11,7 +11,6 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
-using Api.Security;
 
 using Application.Interfaces.Services;
 
@@ -26,108 +25,140 @@ using Microsoft.OpenApi;
 using NLog;
 using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
-// Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-logger.Debug("init main");
-
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("Frontend", policy => policy
-        .WithOrigins("http://localhost:5173")
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials());
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen(options =>
-{
-    // Document de base
-    options.SwaggerDoc("v1", new OpenApiInfo
+    // Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
+    var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+    logger.Debug("init main");
+
+    builder.Services.Configure<CookiePolicyOptions>(options =>
     {
-        Title = "CynaApi API",
-        Version = "v1"
+        options.CheckConsentNeeded = context => false;
+        options.MinimumSameSitePolicy = SameSiteMode.None;
     });
 
-    // D�finition du sch�ma d�authentification Bearer
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    builder.Services.AddCors(options =>
     {
-        Name = "Authorization",
-        Description = "JWT Authorization header using the Bearer scheme. " +
-                      "Exemple : \"Bearer 12345abcdef\"",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
+        options.AddPolicy("Frontend", policy => policy
+            .WithOrigins("http://localhost:5173", "https://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
     });
 
-    // Exigence de s�curit� � NOUVELLE SYNTAXE .NET 10 / Swashbuckle 10
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    builder.Services.AddControllers();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddOpenApi();
+    builder.Services.AddSwaggerGen(options =>
     {
-        // La cl� doit utiliser **exactement** le m�me nom que dans AddSecurityDefinition
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-    });
-});
-
-var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
-
-builder.Services.AddSingleton<EfSlowQueryInterceptor>();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
-{
-    // Ajoute l'intercepteur commun
-    options.AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>());
-
-    // Si on est en local (Development), on peut rester sur SQLite
-    if (builder.Environment.IsDevelopment())
-    {
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        // En Staging et Production (sur OVH), on utilise PostgreSQL
-        options.UseNpgsql(connectionString);
-    }
-
-    // Fix: décalage de version EF tools (10.0.7) vs runtime (10.0.8)
-    options.ConfigureWarnings(warnings =>
-        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
-
-});
-
-// Jwt options
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-
-// Authentification / JWT
-var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
-var keyBytes = Encoding.UTF8.GetBytes(jwtConfig.Key);
-
-builder.Services
-    .AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+        // Document de base
+        options.SwaggerDoc("v1", new OpenApiInfo
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig.Issuer,
-            ValidAudience = jwtConfig.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-            ClockSkew = TimeSpan.Zero
-        };
+            Title = "CynaApi API",
+            Version = "v1"
+        });
+
+        // GESTION DES CONFLITS DE NOMS DE DTO (Ex: Home.CategoryDto vs Catalog.CategoryDto)
+        options.CustomSchemaIds(type => type.FullName);
+
+        // Définition du schéma d'authentification Bearer
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Description = "JWT Authorization header using the Bearer scheme. " +
+                          "Exemple : \"Bearer 12345abcdef\"",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        });
+
+        // Exigence de sécurité à NOUVELLE SYNTAXE .NET 10 / Swashbuckle 10
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            // La clé doit utiliser **exactement** le même nom que dans AddSecurityDefinition
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
     });
 
-builder.Services.AddAuthorization();
+    var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
+
+    builder.Services.AddSingleton<EfSlowQueryInterceptor>();
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+    {
+        // Ajoute l'intercepteur commun
+        options.AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>());
+
+        // Si on est en local (Development), on peut rester sur SQLite
+        if (builder.Environment.IsDevelopment())
+        {
+            options.UseSqlite(connectionString);
+        }
+        else
+        {
+            // En Staging et Production (sur OVH), on utilise PostgreSQL
+            options.UseNpgsql(connectionString);
+        }
+
+        // Fix: décalage de version EF tools (10.0.7) vs runtime (10.0.8)
+        options.ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+
+    });
+
+    // Jwt options
+    builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+
+    // Authentification / JWT
+    var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
+    var keyBytes = Encoding.UTF8.GetBytes(jwtConfig.Key);
+
+    builder.Services
+        .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtConfig.Issuer,
+                ValidAudience = jwtConfig.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                ClockSkew = TimeSpan.Zero,
+                // Le token émis par JwtTokenGenerator porte le rôle dans un claim "role"
+                RoleClaimType = "role"
+            };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var token = context.Request.Cookies["cyna_token"];
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        // Les valeurs correspondent aux descriptions de l'enum UserRole émises dans le claim "role"
+        options.AddPolicy("AdminOnly", policy =>
+            policy.RequireRole("Administrateur", "Super Administrateur"));
+    });
 
 // DI m�tiers
 // --- Dépôts (Infrastructure → Domain) ---
@@ -136,7 +167,10 @@ builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
 builder.Services.AddScoped<ICartRepository,         CartRepository>();
+builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
+builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
@@ -146,50 +180,77 @@ builder.Services.AddScoped<ICatalogService,      CatalogService>();
 builder.Services.AddScoped<IAuthService,         AuthService>();
 builder.Services.AddScoped<ICartService,         CartService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICmsService, CmsService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
-// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
-builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
+    // --- Auth utilisateur ---
+    builder.Services.AddHttpContextAccessor();
 
-// Générateur de Token JWT
-builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
+    // Générateur de Token JWT
+    builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
 
-var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await context.Database.MigrateAsync();
+    // Hasher de mot de passe
 
-    if (args.Contains("--seed") && !app.Environment.IsProduction())
+    var app = builder.Build();
+    using (var scope = app.Services.CreateScope())
     {
-        await DbInitializer.SeedAsync(context);
-    }
-}
-if (!app.Environment.IsProduction())
-{
-    app.MapOpenApi();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
 
-    if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
+        if (args.Contains("--seed") && !app.Environment.IsProduction())
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-            options.RoutePrefix = string.Empty;
-        });
+            await DbInitializer.SeedAsync(context);
+        }
     }
-    else
+    if (!app.Environment.IsProduction())
     {
-        app.MapScalarApiReference();
+        app.MapOpenApi();
+
+        if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                options.RoutePrefix = string.Empty;
+            });
+        }
+        else
+        {
+            app.MapScalarApiReference();
+        }
     }
+
+    // Middleware ordonnées correctement (ordre à respecter pour que les cookies fonctionnent)
+
+    // 1. Redirection HTTP vers HTTPS
+    app.UseHttpsRedirection();
+
+    // 2. Gestion du CORS (Indispensable pour le proxy Vite)
+    app.UseCors("Frontend");
+    // 3. Application de la politique des cookies
+    app.UseCookiePolicy();
+
+    // 4. Authentification (Extrait les tokens/cookies)
+    app.UseAuthentication();
+
+    // 5. Autorisation (Vérifie les accès [Authorize])
+    app.UseAuthorization();
+
+    // 6. Mapping des routes
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    // Log l'exception fatale qui empêche l'application de démarrer
+    var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+    logger.Fatal(ex, "Application failed to start");
+    throw;
 }
 
-app.UseCors("Frontend");
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+/// <summary>
+/// Déclaration partielle pour exposer le point d'entrée aux tests d'intégration (WebApplicationFactory).
+/// </summary>
+public partial class Program;

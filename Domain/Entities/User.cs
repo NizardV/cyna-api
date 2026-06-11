@@ -7,8 +7,9 @@ using Domain.Entities.AuthCodes;
 using Domain.Entities.OrdersAndSubscriptions;
 using Domain.Entities.PromoAndCms;
 
-using Infrastructure.Entities;
 using Infrastructure.Entities.PromoAndCms;
+
+using Tools;
 
 public class User
 {
@@ -35,6 +36,9 @@ public class User
 
     public int? CompanyId { get; set; }
     public Company? Company { get; set; }
+
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     public ICollection<EmailVerificationCode> EmailVerificationCodes { get; set; } = [];
     public ICollection<PasswordResetCode> PasswordResetCodes { get; set; } = [];

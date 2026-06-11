@@ -2,9 +2,9 @@ namespace Domain.Entities.Catalogue;
 
 using System.ComponentModel.DataAnnotations;
 
-using Infrastructure.Entities;
-
 using OrdersAndSubscriptions;
+
+using Tools;
 
 public class Product
 {
@@ -19,6 +19,7 @@ public class Product
     public ProductStatus? Status { get; set; }
 
     public bool IsFeatured { get; set; } = false;
+    public int? DisplayOrder { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

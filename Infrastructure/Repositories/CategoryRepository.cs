@@ -10,6 +10,8 @@ using Domain.Entities.Catalogue;
 
 using Interfaces;
 
+using Tools;
+
 /// <summary>
 /// Implémentation EF Core du dépôt des catégories.
 /// </summary>

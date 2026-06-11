@@ -1,7 +1,5 @@
 namespace Tools;
 
-using Infrastructure.Entities;
-
 public class i18n
 {
     /// <summary>

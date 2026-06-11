@@ -11,6 +11,8 @@ using Domain.Entities.Catalogue;
 
 using Infrastructure.Entities;
 
+using Tools;
+
 public class CartService : ICartService
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();

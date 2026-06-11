@@ -223,6 +223,12 @@ namespace Infrastructure.Migrations
                     b.Property<int>("DiscountPercent")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("MaxDevicesCheckout")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxUsersCheckout")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -277,6 +283,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("INTEGER");
@@ -798,6 +807,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
@@ -1035,13 +1050,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("OrderItems")
                         .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -1056,13 +1071,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("Subscriptions")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.User", "User")
