@@ -14,25 +14,25 @@ using ILogger = NLog.ILogger;
 /// Expose les routes publiques de recherche, filtrage et récupération des catégories.
 /// </summary>
 [ApiController]
-[Route("recherche")]
+[Route("Search")]
 [Produces("application/json")]
-public class RechercheController : ControllerBase
+public class SearchController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ICatalogService _catalogService;
 
     /// <summary>
-    /// Initialise une nouvelle instance de <see cref="RechercheController"/>.
+    /// Initialise une nouvelle instance de <see cref="SearchController"/>.
     /// </summary>
     /// <param name="catalogService">Le service catalogue.</param>
-    public RechercheController(ICatalogService catalogService)
+    public SearchController(ICatalogService catalogService)
     {
         _catalogService = catalogService;
     }
 
     // -------------------------------------------------------------------------
-    // GET /recherche/catalog
+    // GET /Search
     // -------------------------------------------------------------------------
 
     /// <summary>
@@ -49,7 +49,7 @@ public class RechercheController : ControllerBase
     /// <returns>La page de résultats avec métadonnées de pagination.</returns>
     /// <response code="200">Résultats retournés avec succès.</response>
     /// <response code="400">Paramètres de requête invalides.</response>
-    [HttpGet("catalog")]
+    [HttpGet]
     [ProducesResponseType(typeof(CatalogPageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetCatalog(
@@ -64,12 +64,12 @@ public class RechercheController : ControllerBase
     {
         if (page < 1)
         {
-            return BadRequest(new { message = "Le numéro de page doit être supérieur ou égal à 1." });
+            return BadRequest(new { error = "Le numéro de page doit être supérieur ou égal à 1." });
         }
 
         if (pageSize < 1 || pageSize > 100)
         {
-            return BadRequest(new { message = "La taille de page doit être comprise entre 1 et 100." });
+            return BadRequest(new { error = "La taille de page doit être comprise entre 1 et 100." });
         }
 
         _logger.Info(
@@ -80,25 +80,5 @@ public class RechercheController : ControllerBase
             q, categoryIds, maxPrice, available, sortBy, page, pageSize, locale);
 
         return Ok(result);
-    }
-
-    // -------------------------------------------------------------------------
-    // GET /recherche/categories
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Récupère toutes les catégories disponibles dans le catalogue.
-    /// </summary>
-    /// <param name="locale">Langue des traductions : fr | en (défaut : fr).</param>
-    /// <returns>La liste des catégories triées par ordre d'affichage.</returns>
-    /// <response code="200">Catégories récupérées avec succès.</response>
-    [HttpGet("categories")]
-    [ProducesResponseType(typeof(IEnumerable<CategoryDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetCategories([FromQuery] string locale = "fr")
-    {
-        _logger.Info("GET /recherche/categories — locale={Locale}", locale);
-
-        var categories = await _catalogService.GetCategoriesAsync(locale);
-        return Ok(categories);
     }
 }

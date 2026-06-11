@@ -11,7 +11,6 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
-using Api.Security;
 
 using Application.Interfaces.Services;
 
@@ -54,6 +53,7 @@ try
     });
 
     builder.Services.AddControllers();
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddSwaggerGen(options =>
@@ -139,7 +139,9 @@ try
                 ValidIssuer = jwtConfig.Issuer,
                 ValidAudience = jwtConfig.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+                // Le token émis par JwtTokenGenerator porte le rôle dans un claim "role"
+                RoleClaimType = "role"
             };
             options.Events = new JwtBearerEvents
             {
@@ -155,7 +157,12 @@ try
             };
         });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        // Les valeurs correspondent aux descriptions de l'enum UserRole émises dans le claim "role"
+        options.AddPolicy("AdminOnly", policy =>
+            policy.RequireRole("Administrateur", "Super Administrateur"));
+    });
 
     builder.Services.AddOptions();
     builder.Services.AddHttpClient<ResendClient>();
@@ -166,26 +173,28 @@ try
     builder.Services.AddTransient<IResend, ResendClient>();
     builder.Services.AddTransient<EmailHelper>();
 
-    // DI métiers
-    // --- Dépôts (Infrastructure → Domain) ---
-    builder.Services.AddScoped<IUserRepository, UserRepository>();
-    builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-    builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-    builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
-    builder.Services.AddScoped<ICartRepository, CartRepository>();
-    builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
-    builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
-    builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-    builder.Services.AddScoped<IProductRepository, ProductRepository>();
+// DI m�tiers
+// --- Dépôts (Infrastructure → Domain) ---
+builder.Services.AddScoped<IUserRepository,         UserRepository>();
+builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
+builder.Services.AddScoped<ICartRepository,         CartRepository>();
+builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
+builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
-    // --- Services (Application) ---
-    builder.Services.AddScoped<IUserService, UserService>();
-    builder.Services.AddScoped<IOrderService, OrderService>();
-    builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
-    builder.Services.AddScoped<ICatalogService, CatalogService>();
-    builder.Services.AddScoped<IAuthService, AuthService>();
-    builder.Services.AddScoped<ICartService, CartService>();
-    builder.Services.AddScoped<ICmsService, CmsService>();
+// --- Services (Application) ---
+builder.Services.AddScoped<IUserService,         UserService>();
+builder.Services.AddScoped<IOrderService,        OrderService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<ICatalogService,      CatalogService>();
+builder.Services.AddScoped<IAuthService,         AuthService>();
+builder.Services.AddScoped<ICartService,         CartService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICmsService, CmsService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
     // --- Auth utilisateur ---
     builder.Services.AddHttpContextAccessor();
@@ -232,7 +241,6 @@ try
 
     // 2. Gestion du CORS (Indispensable pour le proxy Vite)
     app.UseCors("Frontend");
-
     // 3. Application de la politique des cookies
     app.UseCookiePolicy();
 
@@ -254,3 +262,8 @@ catch (Exception ex)
     logger.Fatal(ex, "Application failed to start");
     throw;
 }
+
+/// <summary>
+/// Déclaration partielle pour exposer le point d'entrée aux tests d'intégration (WebApplicationFactory).
+/// </summary>
+public partial class Program;

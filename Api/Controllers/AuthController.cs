@@ -1,5 +1,7 @@
 ﻿namespace Api.Controllers;
 
+using System.Security.Claims;
+
 using Application.Interfaces;
 
 using Domain.Dto.User;
@@ -101,9 +103,8 @@ public class AuthController : ControllerBase
         var userIdClaim = User.FindFirst("id")?.Value;
         var firstNameClaim = User.FindFirst("firstName")?.Value;
         var lastNameClaim = User.FindFirst("lastName")?.Value;
-        var emailClaim = User.FindFirst("email")?.Value;
-        var roleClaim = User.FindFirst("role")?.Value;
-
+        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+        var roleClaim  = User.FindFirst(ClaimTypes.Role)?.Value;
         if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
 
         return Ok(new

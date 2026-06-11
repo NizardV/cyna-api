@@ -1,10 +1,17 @@
-﻿using System.Data.Common;
+using System.Data.Common;
+
+using Api.IntegrationTests.Auth;
+
+using Infrastructure.Data;
+
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Api.IntegrationTests;
 
@@ -13,22 +20,19 @@ public class CustomWebApplicationFactory<TProgram>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // "Development" pour rester sur la branche SQLite de Program.cs
+        // (les autres environnements basculent sur PostgreSQL).
+        builder.UseEnvironment("Development");
+
         builder.ConfigureServices(services =>
         {
-            var dbContextDescriptor = services.SingleOrDefault(
-                d => d.ServiceType ==
-                    typeof(IDbContextOptionsConfiguration<DbContext>));
+            // ── Base de données : SQLite en mémoire partagée pour toute la factory ──
+            services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
+            services.RemoveAll(typeof(IDbContextOptionsConfiguration<AppDbContext>));
+            services.RemoveAll(typeof(DbConnection));
 
-            services.Remove(dbContextDescriptor);
-
-            var dbConnectionDescriptor = services.SingleOrDefault(
-                d => d.ServiceType ==
-                    typeof(DbConnection));
-
-            services.Remove(dbConnectionDescriptor);
-
-            // Create open SqliteConnection so EF won't automatically close it.
-            services.AddSingleton<DbConnection>(container =>
+            // Connexion ouverte en singleton : la base :memory: vit tant que la connexion est ouverte
+            services.AddSingleton<DbConnection>(_ =>
             {
                 var connection = new SqliteConnection("DataSource=:memory:");
                 connection.Open();
@@ -36,13 +40,19 @@ public class CustomWebApplicationFactory<TProgram>
                 return connection;
             });
 
-            services.AddDbContext<DbContext>((container, options) =>
+            services.AddDbContext<AppDbContext>((container, options) =>
             {
                 var connection = container.GetRequiredService<DbConnection>();
                 options.UseSqlite(connection);
             });
-        });
 
-        builder.UseEnvironment("Test");
+            // ── Authentification : schéma de test piloté par l'en-tête X-Test-Role ──
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = TestAuthHandler.SchemeName;
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
+        });
     }
 }
