@@ -73,12 +73,12 @@ public class UserController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             _logger.Warn(ex, "Profil introuvable");
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.Warn(ex, "Accès non autorisé sur GET /user/profile");
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(new { error = ex.Message });
         }
     }
 
@@ -119,12 +119,12 @@ public class UserController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             _logger.Warn(ex, "Profil introuvable lors de la mise à jour");
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.Warn(ex, "Accès non autorisé sur PUT /user/profile");
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(new { error = ex.Message });
         }
     }
 
@@ -160,17 +160,17 @@ public class UserController : ControllerBase
             _logger.Info("PUT /user/password — utilisateur ID {UserId}", userId);
 
             await _userService.UpdatePasswordAsync(userId, dto);
-            return Ok(new { message = "Mot de passe mis à jour avec succès." });
+            return Ok(new { error = "Mot de passe mis à jour avec succès." });
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.Warn(ex, "Mot de passe actuel incorrect pour l'utilisateur");
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
         catch (KeyNotFoundException ex)
         {
             _logger.Warn(ex, "Utilisateur introuvable lors du changement de mot de passe");
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
         }
     }
 
@@ -201,7 +201,7 @@ public class UserController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             _logger.Warn(ex, "Accès non autorisé sur GET /user/orders");
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(new { error = ex.Message });
         }
     }
 
@@ -232,7 +232,7 @@ public class UserController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             _logger.Warn(ex, "Accès non autorisé sur GET /user/subscriptions");
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(new { error = ex.Message });
         }
     }
 }

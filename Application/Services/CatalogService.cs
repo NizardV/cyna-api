@@ -92,26 +92,4 @@ public class CatalogService : ICatalogService
             }).ToList(),
         };
     }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(string locale)
-    {
-        _logger.Info("Récupération des catégories pour la locale {Locale}", locale);
-
-        var categories = await _catalogRepository.GetCategoriesAsync(locale);
-
-        return categories.Select(c =>
-        {
-            var translation = c.Translations.FirstOrDefault();
-            return new CategoryDto
-            {
-                Id           = c.Id,
-                Slug         = c.Slug,
-                Name         = translation?.Name ?? c.Slug,
-                Description  = translation?.Description,
-                ImageUrl     = c.ImageUrl,
-                DisplayOrder = c.DisplayOrder,
-            };
-        });
-    }
 }
