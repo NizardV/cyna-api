@@ -47,7 +47,7 @@ namespace Infrastructure.Migrations
                 defaultValue: 0);
 
             // Les plans existants doivent garder un checkout fonctionnel (0 bloquerait tout achat)
-            migrationBuilder.Sql("UPDATE PricingPlans SET MaxUsersCheckout = 999, MaxDevicesCheckout = 999;");
+            migrationBuilder.Sql("""UPDATE "PricingPlans" SET "MaxUsersCheckout" = 999, "MaxDevicesCheckout" = 999;""");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_OrderItems_PricingPlans_PricingPlanId",
