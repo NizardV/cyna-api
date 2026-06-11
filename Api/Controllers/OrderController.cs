@@ -9,6 +9,10 @@ namespace Api.Controllers;
 
 using Domain.Dto.Orders;
 
+using Microsoft.AspNetCore.Authorization;
+
+using Tools;
+
 using ILogger = NLog.ILogger;
 
 [ApiController]
@@ -19,18 +23,16 @@ public class OrderController : ControllerBase
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly IOrderService       _orderService;
-    private readonly ICurrentUserService _currentUser;
 
-    public OrderController(IOrderService orderService, ICurrentUserService currentUser)
+    public OrderController(IOrderService orderService)
     {
         _orderService = orderService;
-        _currentUser  = currentUser;
     }
 
     // -------------------------------------------------------------------------
     // POST /orders
     // -------------------------------------------------------------------------
-
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(CreateOrderResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,7 +41,7 @@ public class OrderController : ControllerBase
     {
         try
         {
-            var userId = _currentUser.UserId;
+            var userId = ClaimsHelper.GetUserId(User);
             _logger.Info("POST /orders — userId={UserId}", userId);
 
             var result = await _orderService.CreateOrderAsync(userId, dto);

@@ -11,7 +11,6 @@ using Application.Services;
 using Infrastructure.Data;
 using Infrastructure.Interfaces;
 using Infrastructure.Repositories;
-using Api.Security;
 
 using Application.Interfaces.Services;
 
