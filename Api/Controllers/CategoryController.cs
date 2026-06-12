@@ -18,7 +18,6 @@ using ILogger = NLog.ILogger;
 [ApiController]
 [Route("categories")]
 [Produces("application/json")]
-// [Authorize(Roles = "Admin,SuperAdmin")]
 public class AdminCategoryController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();

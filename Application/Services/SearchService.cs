@@ -8,12 +8,14 @@ using Infrastructure.Interfaces;
 
 using Interfaces;
 
-
+/// <summary>
+/// Implémentation du service de recherche catalogue.
+/// Délègue le filtrage, le tri et la pagination au dépôt, puis mappe les entités vers les DTOs.
+/// </summary>
 public class SearchService : ISearchService
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    /// <summary>Taille de page par défaut pour le catalogue.</summary>
     private const int DefaultPageSize = 9;
 
     private readonly ISearchRepository _searchRepository;
@@ -21,7 +23,7 @@ public class SearchService : ISearchService
     /// <summary>
     /// Initialise une nouvelle instance de <see cref="SearchService"/>.
     /// </summary>
-    /// <param name="searchRepository">Le dépôt catalogue.</param>
+    /// <param name="searchRepository">Le dépôt de recherche catalogue.</param>
     public SearchService(ISearchRepository searchRepository)
     {
         _searchRepository = searchRepository;
@@ -42,11 +44,9 @@ public class SearchService : ISearchService
             "Recherche catalogue — q={Q}, page={Page}, pageSize={PageSize}, locale={Locale}",
             q, page, pageSize, locale);
 
-        // Normalisation des paramètres de pagination
         page     = Math.Max(1, page);
         pageSize = pageSize > 0 ? pageSize : DefaultPageSize;
 
-        // Conversion de la chaîne categoryIds en liste d'entiers
         var catIdList = categoryIds?
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => int.TryParse(s.Trim(), out var id) ? (int?)id : null)
@@ -77,7 +77,6 @@ public class SearchService : ISearchService
                     Description = translation?.Description ?? string.Empty,
                     Status      = p.Status?.ToString() ?? string.Empty,
                     ImageUrl    = p.Images.FirstOrDefault()?.ImageUrl,
-                    // get lowest price from all pricing plans and tiers
                     Price = p.PricingPlans
                         .SelectMany(pp => pp.PricingTiers.Select(t => new {
                             Price = t.PricePerUnit * (1 - pp.DiscountPercent / 100m)

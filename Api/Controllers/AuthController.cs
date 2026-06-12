@@ -12,6 +12,11 @@ using Microsoft.AspNetCore.Mvc;
 
 using Tools;
 
+/// <summary>
+/// Contrôleur d'authentification.
+/// Gère la connexion, l'inscription, le renouvellement de token et la déconnexion.
+/// Les jetons JWT sont transmis via des cookies HttpOnly (jamais dans le corps de la réponse).
+/// </summary>
 [ApiController]
 [Route("auth")]
 [Produces("application/json")]
@@ -19,12 +24,26 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="AuthController"/>.
+    /// </summary>
+    /// <param name="authService">Le service d'authentification.</param>
     public AuthController(IAuthService authService)
     {
         _authService = authService;
     }
 
+    /// <summary>
+    /// Authentifie un utilisateur avec son email et son mot de passe.
+    /// En cas de succès, injecte les tokens JWT dans des cookies HttpOnly.
+    /// </summary>
+    /// <param name="request">L'email et le mot de passe de l'utilisateur.</param>
+    /// <returns>Un message de confirmation (les tokens sont dans les cookies).</returns>
+    /// <response code="200">Connexion réussie.</response>
+    /// <response code="401">Identifiants invalides.</response>
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var result = await _authService.LoginAsync(request);
@@ -34,27 +53,39 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = result.ErrorMessage });
         }
 
-        // 1. On injecte l'Access Token dans un cookie HttpOnly
         AppendAuthCookie("cyna_token", result.Token!, minutes: 15);
+        AppendAuthCookie("cyna_refresh_token", result.RefreshToken!, minutes: 1440);
 
-        // 2. On injecte le Refresh Token dans un autre cookie HttpOnly
-        AppendAuthCookie("cyna_refresh_token", result.RefreshToken!, minutes: 1440); // 24h
-
-        // 3. On ne renvoie RIEN dans le body JSON (les jetons sont masqués dans les en-têtes HTTP !)
         return Ok(new { message = "Connexion réussie." });
     }
 
+    /// <summary>
+    /// Crée un nouveau compte utilisateur.
+    /// </summary>
+    /// <param name="request">Les informations d'inscription (prénom, nom, email, mot de passe).</param>
+    /// <returns>Un message de confirmation.</returns>
+    /// <response code="200">Inscription réussie.</response>
+    /// <response code="400">Email déjà utilisé ou données invalides.</response>
     [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
         var result = await _authService.RegisterAsync(request);
         return result.Success ? Ok(new { message = "Inscription réussie." }) : BadRequest(new { message = result.ErrorMessage });
     }
 
+    /// <summary>
+    /// Renouvelle l'access token à partir du refresh token présent dans les cookies.
+    /// </summary>
+    /// <returns>Un message de confirmation (les nouveaux tokens sont dans les cookies).</returns>
+    /// <response code="200">Tokens rafraîchis.</response>
+    /// <response code="400">Refresh token absent, invalide ou expiré.</response>
     [HttpPost("refresh")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Refresh()
     {
-        // 1. On va chercher le refresh token DIRECTEMENT dans les cookies de la requête
         var currentRefreshToken = Request.Cookies["cyna_refresh_token"];
 
         if (string.IsNullOrEmpty(currentRefreshToken))
@@ -70,17 +101,21 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Impossible de générer un nouveau token." });
         }
 
-        // 2. On écrase les anciens cookies avec les nouveaux jetons
         AppendAuthCookie("cyna_token", result.Token!, minutes: 15);
         AppendAuthCookie("cyna_refresh_token", result.RefreshToken!, minutes: 1440);
 
         return Ok(new { message = "Tokens rafraîchis." });
     }
 
+    /// <summary>
+    /// Déconnecte l'utilisateur en invalidant le refresh token en base et en supprimant les cookies.
+    /// </summary>
+    /// <returns>Un message de confirmation.</returns>
+    /// <response code="200">Déconnexion réussie.</response>
     [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout()
     {
-        // 1. On récupère le token pour l'invalider en BDD
         var currentRefreshToken = Request.Cookies["cyna_refresh_token"];
 
         if (!string.IsNullOrEmpty(currentRefreshToken))
@@ -88,18 +123,24 @@ public class AuthController : ControllerBase
             await _authService.LogoutAsync(currentRefreshToken);
         }
 
-        // 2. On SUPPRIME les cookies du navigateur en les forçant à expirer immédiatement
         Response.Cookies.Delete("cyna_token", GetCookieOptions(expired: true));
         Response.Cookies.Delete("cyna_refresh_token", GetCookieOptions(expired: true));
 
         return Ok(new { message = "Déconnexion réussie." });
     }
 
-    [Authorize] // Obligatoire : l'utilisateur doit avoir un cookie valide
+    /// <summary>
+    /// Retourne les informations de l'utilisateur actuellement connecté à partir de son token JWT.
+    /// </summary>
+    /// <returns>Les claims de l'utilisateur (id, prénom, nom, email, rôle).</returns>
+    /// <response code="200">Utilisateur authentifié.</response>
+    /// <response code="401">Token absent ou invalide.</response>
+    [Authorize]
     [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
     {
-        // On extrait les claims qu'on a configurés dans le JwtTokenGenerator
         var userIdClaim = User.FindFirst("id")?.Value;
         var firstNameClaim = User.FindFirst("firstName")?.Value;
         var lastNameClaim = User.FindFirst("lastName")?.Value;
@@ -117,10 +158,6 @@ public class AuthController : ControllerBase
         });
     }
 
-    // ---------------------------------------------------------------------------
-    // HELPERS PRIVÉS POUR SÉCURISER LES COOKIES
-    // ---------------------------------------------------------------------------
-
     private void AppendAuthCookie(string key, string value, int minutes)
     {
         var options = GetCookieOptions();
@@ -132,10 +169,10 @@ public class AuthController : ControllerBase
     {
         return new CookieOptions
         {
-            HttpOnly = true,                    
+            HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Strict, 
-            Path = "/",                  
+            SameSite = SameSiteMode.Strict,
+            Path = "/",
             Expires = expired ? DateTime.UtcNow.AddDays(-1) : null
         };
     }

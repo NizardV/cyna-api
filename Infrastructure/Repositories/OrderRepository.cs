@@ -19,6 +19,10 @@ public class OrderRepository : IOrderRepository
 
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="OrderRepository"/>.
+    /// </summary>
+    /// <param name="context">Le contexte de base de données.</param>
     public OrderRepository(AppDbContext context)
     {
         _context = context;
@@ -64,16 +68,13 @@ public class OrderRepository : IOrderRepository
     {
         _logger.Debug("Création commande pour l'utilisateur ID {UserId}", userId);
 
-        // 1. Adresse de facturation
         _context.Addresses.Add(billingAddress);
         await _context.SaveChangesAsync();
 
-        // 2. Commande + articles
         order.BillingAddressId = billingAddress.Id;
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
 
-        // 3. Abonnements
         var subList = subscriptions.ToList();
         if (subList.Count > 0)
         {
@@ -81,7 +82,6 @@ public class OrderRepository : IOrderRepository
             await _context.SaveChangesAsync();
         }
 
-        // 4. Vider le panier
         await _context.CartItems
             .Where(ci => ci.UserId == userId)
             .ExecuteDeleteAsync();

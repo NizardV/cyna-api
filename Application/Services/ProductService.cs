@@ -16,11 +16,21 @@ using Tools;
 
 namespace Application.Services;
 
+/// <summary>
+/// Implémentation du service produits.
+/// Gère la consultation, la création, la mise à jour et la suppression des produits
+/// ainsi que le mapping vers les DTOs publics et back-office.
+/// </summary>
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
     private readonly ILogger<ProductService> _logger;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="ProductService"/>.
+    /// </summary>
+    /// <param name="productRepository">Le dépôt produits.</param>
+    /// <param name="logger">Le logger.</param>
     public ProductService(IProductRepository productRepository, ILogger<ProductService> logger)
     {
         _productRepository = productRepository;
@@ -43,7 +53,6 @@ public class ProductService : IProductService
         var pTranslation = product.Translations.FirstOrDefault();
         var cTranslation = product.Category?.Translations.FirstOrDefault();
 
-        // Mappage exclusif vers l'arbre de DTOs "Product"
         return new ProductDetailsDto
         {
             Id = product.Id,
@@ -96,14 +105,12 @@ public class ProductService : IProductService
             var translation = p.Translations.FirstOrDefault();
             var image = p.Images.FirstOrDefault();
 
-            //On fouille dans tous les paliers de tous les plans pour trouver le prix unitaire le plus bas
             decimal? price = p.PricingPlans
                 .SelectMany(plan => plan.PricingTiers)
                 .Select(tier => (decimal?)tier.PricePerUnit)
                 .DefaultIfEmpty()
                 .Min();
 
-            // Troncature de la description à 100 caractères max
             string desc = translation?.Description ?? string.Empty;
             if (desc.Length > 100)
             {
@@ -279,7 +286,6 @@ public class ProductService : IProductService
 
     private async Task ValidateUpsertAsync(ProductUpsertRequestDto dto)
     {
-        // Le parsing lève une ArgumentException si une valeur est inconnue
         ParseStatus(dto.Status);
 
         if (!await _productRepository.CategoryExistsAsync(dto.CategoryId))
@@ -376,7 +382,6 @@ public class ProductService : IProductService
 
     private static string GenerateSlug(string name)
     {
-        // Suppression des accents (é → e) puis normalisation en kebab-case
         var withoutDiacritics = new string(name.Trim().ToLowerInvariant()
             .Normalize(NormalizationForm.FormD)
             .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
@@ -413,7 +418,7 @@ public class ProductService : IProductService
         }
         catch (JsonException)
         {
-            // Données historiques non JSON (ex. "Platforms: ... | SLA: ...") : découpage sur le séparateur
+            // Données legacy stockées en texte libre séparé par « | » avant la migration JSON
             return raw.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         }
     }
@@ -501,6 +506,7 @@ public class ProductService : IProductService
             existing.MaxDevicesCheckout = planDto.MaxDevicesCheckout;
 
             // Les paliers n'ont aucune référence externe : remplacement complet
+            // Les paliers n'ont aucune référence externe (commandes/abonnements) : remplacement complet autorisé.
             existing.PricingTiers.Clear();
             foreach (var tierDto in planDto.PricingTiers)
             {

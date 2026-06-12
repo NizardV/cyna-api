@@ -24,7 +24,6 @@ public class UserService : IUserService
     /// Initialise une nouvelle instance de <see cref="UserService"/>.
     /// </summary>
     /// <param name="userRepository">Le dépôt utilisateur.</param>
-    /// <param name="passwordHasher">Le service de hachage de mot de passe.</param>
     public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;

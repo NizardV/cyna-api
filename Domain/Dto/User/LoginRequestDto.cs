@@ -1,14 +1,17 @@
-﻿namespace Domain.Dto.User
+﻿namespace Domain.Dto.User;
+
+using System.ComponentModel.DataAnnotations;
+
+/// <summary>
+/// Corps de la requête de connexion.
+/// </summary>
+public class LoginRequestDto
 {
-    using System.ComponentModel.DataAnnotations;
+    /// <summary>L'adresse email de l'utilisateur.</summary>
+    [Required, EmailAddress]
+    public string Email { get; set; } = string.Empty;
 
-    public class LoginRequestDto
-    {
-        [Required]
-        [EmailAddress] // Optionnel, mais idéal pour valider le format côté API
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        public string Password { get; set; } = string.Empty;
-    }
+    /// <summary>Le mot de passe en clair (transmis uniquement en HTTPS).</summary>
+    [Required]
+    public string Password { get; set; } = string.Empty;
 }

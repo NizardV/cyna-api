@@ -9,10 +9,17 @@ using Tools;
 
 namespace Infrastructure.Repositories;
 
+/// <summary>
+/// Implémentation du dépôt produits via Entity Framework Core.
+/// </summary>
 public class ProductRepository : IProductRepository
 {
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="ProductRepository"/>.
+    /// </summary>
+    /// <param name="context">Le contexte de base de données.</param>
     public ProductRepository(AppDbContext context)
     {
         _context = context;
@@ -25,10 +32,10 @@ public class ProductRepository : IProductRepository
             .AsNoTracking()
             .Where(p => p.IsFeatured == true && p.Status.HasValue && p.Status.Value == ProductStatus.Available)
             .Include(p => p.Translations.Where(t => t.Locale == locale))
-            .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1)) // Seulement la 1ère image
-            .Include(p => p.PricingPlans.Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)) // On cherche les plans mensuels
-                .ThenInclude(pp => pp.PricingTiers) // Pour trouver le prix le plus bas
-            .OrderByDescending(p => p.CreatedAt) // Les plus récents en premier
+            .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1))
+            .Include(p => p.PricingPlans.Where(pp => pp.BillingPeriod == BillingPeriod.Monthly))
+                .ThenInclude(pp => pp.PricingTiers)
+            .OrderByDescending(p => p.CreatedAt)
             .Take(limit)
             .ToListAsync();
     }
@@ -50,7 +57,6 @@ public class ProductRepository : IProductRepository
     /// <inheritdoc />
     public async Task<IEnumerable<Product>> GetSimilarProductsAsync(int currentProductId, LocaleLang locale)
     {
-        // 1. On cherche la catégorie du produit actuel
         var currentCategoryId = await _context.Products
             .Where(p => p.Id == currentProductId)
             .Select(p => p.CategoryId)
@@ -58,7 +64,6 @@ public class ProductRepository : IProductRepository
 
         if (currentCategoryId == 0) return new List<Product>();
 
-        // 2. Requête de base allégée (Sans les Pricing Plans)
         var baseQuery = _context.Products
             .AsNoTracking()
             .Where(p => p.Id != currentProductId)
@@ -67,14 +72,13 @@ public class ProductRepository : IProductRepository
             .Include(p => p.PricingPlans)
             .ThenInclude(pp => pp.PricingTiers);
 
-        // 3. Exécution standardisée (Compatible avec toutes les bases de données)
+        // Tri côté base de données : CASE WHEN compatible SQLite et PostgreSQL
         var similarProducts = await baseQuery
             .Where(p => p.CategoryId == currentCategoryId)
             .OrderByDescending(p => p.Status == ProductStatus.Available ? 1 : 0)
             .Take(6)
             .ToListAsync();
 
-        // 4. Fallback si on a moins de 6 produits
         if (similarProducts.Count < 6)
         {
             var fallbackProducts = await baseQuery

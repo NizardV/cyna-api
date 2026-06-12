@@ -38,7 +38,6 @@ public class ProductController : ControllerBase
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="403">Utilisateur non administrateur.</response>
     [HttpGet]
-    //# todo [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(IEnumerable<ProductAdminListItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -55,8 +54,12 @@ public class ProductController : ControllerBase
     // -------------------------------------------------------------------------
 
     /// <summary>
-    /// Récupère les détails complets d'un produit (Données isolées).
+    /// Récupère les détails complets d'un produit (spécifications, images et grilles tarifaires).
     /// </summary>
+    /// <param name="id">L'identifiant du produit.</param>
+    /// <param name="locale">Langue des traductions (défaut : Fr).</param>
+    /// <response code="200">Produit retourné avec succès.</response>
+    /// <response code="404">Produit introuvable.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ProductDetailsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -77,17 +80,18 @@ public class ProductController : ControllerBase
     // -------------------------------------------------------------------------
 
     /// <summary>
-    /// Récupère 6 produits similaires (même catégorie en priorité, disponibles en priorité, aléatoires).
+    /// Récupère jusqu'à 6 produits similaires (même catégorie en priorité, disponibles en priorité).
+    /// Retourne toujours 200 OK — un tableau vide si aucun similaire n'est trouvé.
     /// </summary>
+    /// <param name="id">L'identifiant du produit de référence.</param>
+    /// <param name="locale">Langue des traductions (défaut : Fr).</param>
+    /// <response code="200">Liste retournée (peut être vide).</response>
     [HttpGet("{id:int}/similar")]
     [HttpGet("similar/{id:int}")]
     [ProducesResponseType(typeof(IEnumerable<ProductSimilarDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ProductSimilarDto>>> GetSimilarProducts(int id, [FromQuery] LocaleLang locale = LocaleLang.Fr)
     {
         var similarProducts = await _productService.GetSimilarProductsAsync(id, locale);
-
-        // Même s'il n'y a pas de produits similaires, on renvoie un tableau vide (200 OK)
-        // C'est une meilleure pratique que de renvoyer une 404 pour une liste annexe.
         return Ok(similarProducts);
     }
 
@@ -103,7 +107,6 @@ public class ProductController : ControllerBase
     /// <response code="403">Utilisateur non administrateur.</response>
     /// <response code="404">Produit introuvable.</response>
     [HttpGet("{id:int}/admin")]
-    //# todo [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -132,7 +135,6 @@ public class ProductController : ControllerBase
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="403">Utilisateur non administrateur.</response>
     [HttpPost]
-    //# todo [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -167,7 +169,6 @@ public class ProductController : ControllerBase
     /// <response code="404">Produit introuvable.</response>
     /// <response code="409">Un plan retiré est référencé par des commandes ou abonnements.</response>
     [HttpPut("{id:int}")]
-    //# todo [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -214,7 +215,6 @@ public class ProductController : ControllerBase
     /// <response code="404">Produit introuvable.</response>
     /// <response code="409">Le produit est référencé par des commandes ou abonnements.</response>
     [HttpDelete("{id:int}")]
-    //# todo [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

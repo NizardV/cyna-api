@@ -12,11 +12,20 @@ using Infrastructure.Interfaces;
 
 using Tools;
 
+/// <summary>
+/// Implémentation du service d'authentification.
+/// Gère la connexion, l'inscription, le renouvellement de token et la déconnexion.
+/// </summary>
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenGenerator _jwtTokenGenerator;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="AuthService"/>.
+    /// </summary>
+    /// <param name="userRepository">Le dépôt utilisateur.</param>
+    /// <param name="jwtTokenGenerator">Le générateur de tokens JWT.</param>
     public AuthService(
         IUserRepository userRepository,
         ITokenGenerator jwtTokenGenerator)
@@ -25,9 +34,9 @@ public class AuthService : IAuthService
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 
+    /// <inheritdoc />
     public async Task<AuthResultDto> LoginAsync(LoginRequestDto request)
     {
-        // 1. Chercher l'utilisateur via le Repository
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
         if (user == null)
@@ -35,25 +44,19 @@ public class AuthService : IAuthService
             return new AuthResultDto { Success = false, ErrorMessage = "Identifiants invalides." };
         }
 
-        // 2. Vérifier le mot de passe
         var isPasswordValid = request.Password.VerifyHashProvided(user.PasswordHash);
         if (!isPasswordValid)
         {
             return new AuthResultDto { Success = false, ErrorMessage = "Identifiants invalides." };
         }
 
-        // 3. Générer le Token
         var token = _jwtTokenGenerator.GenerateToken(user);
-
-        // 4. Générer un RefreshToken
         string refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
-        // 5. Sauvegarder le RefreshToken via le Repository
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1); // Valable 1 jour
+        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1);
 
         await _userRepository.UpdateAsync(user);
-
 
         return new AuthResultDto
         {
@@ -63,16 +66,14 @@ public class AuthService : IAuthService
         };
     }
 
+    /// <inheritdoc />
     public async Task<AuthResultDto> RegisterAsync(RegisterRequestDto request)
     {
-        // 1. Vérifier si l'utilisateur existe déjà via le Repository
         var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user != null) return new AuthResultDto { Success = false, ErrorMessage = "Email déjà utilisé." };
 
-        // 2. Hasher le mot de passe
         var hashedPassword = request.Password.GetHash();
 
-        // 3. Créer l'entité User
         var newUser = new User
         {
             Email = request.Email,
@@ -94,9 +95,9 @@ public class AuthService : IAuthService
         };
     }
 
+    /// <inheritdoc />
     public async Task<AuthResultDto?> ResetTokenAsync(RefreshTokenRequestDto request)
     {
-        // Récupération via le Repository
         var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken);
 
         if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow) return null;
@@ -117,6 +118,7 @@ public class AuthService : IAuthService
         };
     }
 
+    /// <inheritdoc />
     public async Task<bool> LogoutAsync(string refreshToken)
     {
         var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
@@ -128,5 +130,4 @@ public class AuthService : IAuthService
         await _userRepository.UpdateAsync(user);
         return true;
     }
-
 }

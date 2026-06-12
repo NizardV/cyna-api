@@ -9,7 +9,11 @@ using Tools;
 
 namespace Application.Services;
 
-/// <inheritdoc />
+/// <summary>
+/// Implémentation du service CMS.
+/// Agrège les données du carrousel, des paramètres de site, des catégories et des produits
+/// mis en avant pour alimenter la page d'accueil.
+/// </summary>
 public class CmsService : ICmsService
 {
     private readonly ICarouselRepository _carouselRepository;
@@ -18,8 +22,20 @@ public class CmsService : ICmsService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IProductRepository _productRepository;
 
-
-    public CmsService(ICarouselRepository carouselRepository, ILogger<CmsService> logger, ISiteSettingRepository siteSettingRepository, ICategoryRepository categoryRepository, IProductRepository productRepository)
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="CmsService"/>.
+    /// </summary>
+    /// <param name="carouselRepository">Le dépôt des slides du carrousel.</param>
+    /// <param name="logger">Le logger.</param>
+    /// <param name="siteSettingRepository">Le dépôt des paramètres CMS dynamiques.</param>
+    /// <param name="categoryRepository">Le dépôt des catégories.</param>
+    /// <param name="productRepository">Le dépôt des produits.</param>
+    public CmsService(
+        ICarouselRepository carouselRepository,
+        ILogger<CmsService> logger,
+        ISiteSettingRepository siteSettingRepository,
+        ICategoryRepository categoryRepository,
+        IProductRepository productRepository)
     {
         _carouselRepository = carouselRepository;
         _logger = logger;
@@ -56,7 +72,6 @@ public class CmsService : ICmsService
     /// <inheritdoc />
     public async Task<string?> GetHomeMissionTextAsync(LocaleLang locale)
     {
-        // La clé exacte définie dans ta base de données
         string key = "homepage_mission_text";
 
         var text = await _siteSettingRepository.GetSettingValueAsync(key, locale);
@@ -110,14 +125,12 @@ public class CmsService : ICmsService
             var translation = p.Translations.FirstOrDefault();
             var image = p.Images.FirstOrDefault();
 
-            // Logique Métier : Trouver le prix le plus bas parmi les Tiers du plan Mensuel
             decimal? minPrice = p.PricingPlans
                 .SelectMany(plan => plan.PricingTiers)
                 .Select(tier => tier.PricePerUnit)
                 .DefaultIfEmpty()
                 .Min();
 
-            // Logique Métier : Créer une description courte (max 100 caractères)
             string? shortDesc = translation?.Description;
             if (!string.IsNullOrEmpty(shortDesc) && shortDesc.Length > 100)
             {
@@ -131,7 +144,7 @@ public class CmsService : ICmsService
                 Name = translation?.Name,
                 ShortDescription = shortDesc,
                 ImageUrl = image?.ImageUrl,
-                StartingPrice = minPrice == 0 ? null : minPrice // Si pas de prix, on renvoie null
+                StartingPrice = minPrice == 0 ? null : minPrice
             };
         });
     }

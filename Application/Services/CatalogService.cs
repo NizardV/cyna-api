@@ -67,12 +67,10 @@ public class CatalogService : ICatalogService
             PageSize = pageSize,
             TotalPages = totalPages,
 
-            // Données de la bannière
             CategoryName = catTranslation?.Name ?? category.Slug,
             CategoryDescription = catTranslation?.Description,
             CategoryImageUrl = category.ImageUrl,
 
-            // Mapping des produits (Identique à ton collègue pour la consistance)
             Items = items.Select(p =>
             {
                 var translation = p.Translations.FirstOrDefault();

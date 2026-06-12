@@ -21,6 +21,10 @@ public class CategoryRepository : ICategoryRepository
 
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="CategoryRepository"/>.
+    /// </summary>
+    /// <param name="context">Le contexte de base de données.</param>
     public CategoryRepository(AppDbContext context)
     {
         _context = context;

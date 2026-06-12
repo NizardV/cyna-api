@@ -16,30 +16,29 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(int userId);
 
     /// <summary>
-    /// Récupère un utilisateur par son email
+    /// Récupère un utilisateur par son adresse email.
     /// </summary>
-    /// <param name="email"></param>
-    /// <returns></returns>
+    /// <param name="email">L'adresse email de l'utilisateur.</param>
+    /// <returns>L'utilisateur correspondant, ou <c>null</c> s'il n'existe pas.</returns>
     Task<User?> GetByEmailAsync(string email);
 
     /// <summary>
-    /// Récupère un utilisateur par son refresh token
+    /// Récupère un utilisateur par son refresh token (utilisé lors du renouvellement de token).
     /// </summary>
-    /// <param name="refreshToken"></param>
-    /// <returns></returns>
+    /// <param name="refreshToken">Le refresh token à rechercher.</param>
+    /// <returns>L'utilisateur correspondant, ou <c>null</c> si le token est inconnu.</returns>
     Task<User?> GetByRefreshTokenAsync(string refreshToken);
 
     /// <summary>
     /// Ajoute un nouvel utilisateur à la base de données.
     /// </summary>
-    /// <param name="user"></param>
-    /// <returns></returns>
+    /// <param name="user">L'entité utilisateur à persister.</param>
     Task AddAsync(User user);
+
     /// <summary>
     /// Met à jour les informations d'un utilisateur dans la base de données.
     /// </summary>
-    /// <param name="user"></param>
-    /// <returns></returns>
+    /// <param name="user">L'entité utilisateur modifiée à sauvegarder.</param>
     Task UpdateAsync(User user);
 
     /// <summary>
