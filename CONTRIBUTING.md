@@ -63,6 +63,8 @@ L'API démarre sur `https://localhost:7169` et crée automatiquement `CynaApi.db
 docker compose -f ../Cyna-Infra/docker-compose/docker-compose.localdb.yml up -d
 ```
 
+N'oublie pas de lancer Docker Desktop sur Windows
+
 **2. Configurer l'API**
 
 Crée ou modifie `Api/appsettings.Development.json` (ce fichier est gitignored) :
