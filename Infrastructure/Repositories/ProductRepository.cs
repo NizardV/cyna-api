@@ -23,7 +23,7 @@ public class ProductRepository : IProductRepository
     {
         return await _context.Products
             .AsNoTracking()
-            .Where(p => p.IsFeatured && p.Status == ProductStatus.Available)
+            .Where(p => p.IsFeatured == true && p.Status.HasValue && p.Status.Value == ProductStatus.Available)
             .Include(p => p.Translations.Where(t => t.Locale == locale))
             .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1)) // Seulement la 1ère image
             .Include(p => p.PricingPlans.Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)) // On cherche les plans mensuels
@@ -70,7 +70,7 @@ public class ProductRepository : IProductRepository
         // 3. Exécution standardisée (Compatible avec toutes les bases de données)
         var similarProducts = await baseQuery
             .Where(p => p.CategoryId == currentCategoryId)
-            .OrderByDescending(p => p.Status == ProductStatus.Available)
+            .OrderByDescending(p => p.Status == ProductStatus.Available ? 1 : 0)
             .Take(6)
             .ToListAsync();
 
@@ -79,7 +79,7 @@ public class ProductRepository : IProductRepository
         {
             var fallbackProducts = await baseQuery
                 .Where(p => p.CategoryId != currentCategoryId)
-                .OrderByDescending(p => p.Status == ProductStatus.Available)
+                .OrderByDescending(p => p.Status == ProductStatus.Available ? 1 : 0)
                 .Take(6 - similarProducts.Count)
                 .ToListAsync();
 
