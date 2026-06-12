@@ -32,34 +32,39 @@ public class CatalogRepository : ICatalogRepository
     }
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<Product> Items, int Total)> GetProductsAsync(
+    public async Task<(Category? Category, IEnumerable<Product> Items, int Total)> GetCategoryCatalogAsync(
+        string slug,
         string? q,
-        IEnumerable<int>? categoryIds,
         decimal? maxPrice,
         bool available,
-        string sortBy,
         int page,
         int pageSize,
         string locale)
     {
-        _logger.Debug(
-            "Recherche catalogue — q={Q}, catégories={CatIds}, maxPrice={MaxPrice}, page={Page}",
-            q, categoryIds, maxPrice, page);
-
-        // Résolution de la locale en enum
         var localeEnum = locale.ToLower() == "en" ? LocaleLang.En : LocaleLang.Fr;
 
+        // 1. Récupération de la catégorie
+        var category = await _context.Categories
+            .AsNoTracking()
+            .Include(c => c.Translations.Where(t => t.Locale == localeEnum))
+            .FirstOrDefaultAsync(c => c.Slug == slug);
+
+        if (category == null)
+        {
+            return (null, Enumerable.Empty<Product>(), 0);
+        }
+
+        // 2. Base de la requête filtre strict sur la catégorie
         var query = _context.Products
             .AsNoTracking()
+            .Where(p => p.CategoryId == category.Id)
             .Include(p => p.Translations.Where(t => t.Locale == localeEnum))
-            .Include(p => p.Category)
-                .ThenInclude(c => c.Translations.Where(t => t.Locale == localeEnum))
             .Include(p => p.Images.OrderBy(i => i.DisplayOrder).Take(1))
             .Include(p => p.PricingPlans)
                 .ThenInclude(pp => pp.PricingTiers)
             .AsQueryable();
 
-        // --- Filtrage ---
+        // 3. Filtres appliqués indépendamment de la recherche globale
         if (!string.IsNullOrWhiteSpace(q))
         {
             var qLower = q.ToLower();
@@ -68,19 +73,11 @@ public class CatalogRepository : ICatalogRepository
                                      || t.Description.ToLower().Contains(qLower)));
         }
 
-        var catList = categoryIds?.ToList();
-        if (catList is { Count: > 0 })
-        {
-            query = query.Where(p => catList.Contains(p.CategoryId));
-        }
-
         if (maxPrice.HasValue)
         {
-            // Filtre sur le prix unitaire minimum parmi les paliers mensuels
-            query = query.Where(p =>
-                p.PricingPlans.Any(pp =>
-                    pp.BillingPeriod == BillingPeriod.Monthly &&
-                    pp.PricingTiers.Any(t => t.PricePerUnit <= maxPrice.Value)));
+            query = query.Where(p => p.PricingPlans.Any(pp =>
+                pp.BillingPeriod == BillingPeriod.Monthly &&
+                pp.PricingTiers.Any(t => t.PricePerUnit <= maxPrice.Value)));
         }
 
         if (available)
@@ -88,38 +85,20 @@ public class CatalogRepository : ICatalogRepository
             query = query.Where(p => p.Status == ProductStatus.Available);
         }
 
-        // --- Tri ---
-        query = sortBy switch
-        {
-            "price_asc" => query
-                .OrderByDescending(p => p.IsFeatured)
-                .ThenBy(p =>
-                    p.PricingPlans
-                        .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
-                        .SelectMany(pp => pp.PricingTiers)
-                        .Min(t => (decimal?)t.PricePerUnit) ?? decimal.MaxValue),
-            "price_desc" => query
-                .OrderByDescending(p => p.IsFeatured)
-                .ThenByDescending(p =>
-                    p.PricingPlans
-                        .Where(pp => pp.BillingPeriod == BillingPeriod.Monthly)
-                        .SelectMany(pp => pp.PricingTiers)
-                        .Min(t => (decimal?)t.PricePerUnit) ?? decimal.Zero),
-            "name" => query
-                .OrderByDescending(p => p.IsFeatured)
-                .ThenBy(p => p.Translations.First().Name),
-            _ => query
-                .OrderByDescending(p => p.IsFeatured)
-                .ThenBy(p => p.Id),
-        };
+        // 4. Algorithme de tri strict du Catalogue (Catalog Priority)
+        query = query
+            .OrderByDescending(p => p.Status == ProductStatus.Available)
+            .ThenByDescending(p => p.IsFeatured)
+            .ThenBy(p => p.DisplayOrder)
+            .ThenBy(p => p.Id);
 
-        // --- Pagination ---
+        // 5. Exécution et pagination
         var total = await query.CountAsync();
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        return (items, total);
+        return (category, items, total);
     }
 }

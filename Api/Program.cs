@@ -206,6 +206,7 @@ builder.Services.AddScoped<ICarouselRepository, CarouselRepository>();
 builder.Services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ISearchRepository, SearchRepository>();
 
 // --- Services (Application) ---
 builder.Services.AddScoped<IUserService,         UserService>();
@@ -217,6 +218,7 @@ builder.Services.AddScoped<ICartService,         CartService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICmsService, CmsService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
     // --- Auth utilisateur ---
     builder.Services.AddHttpContextAccessor();
