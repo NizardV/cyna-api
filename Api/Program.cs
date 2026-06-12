@@ -58,7 +58,7 @@ try
             else if (builder.Environment.IsStaging())
             {
                 policy
-                    .WithOrigins("https://staging.projet-cyna.fr")
+                    .WithOrigins("https://staging.projet-cyna.fr", "http://localhost:5173", "https://localhost:5173")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
