@@ -26,6 +26,7 @@ public static class AppServicesExtensions
         services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ISearchRepository, SearchRepository>();
 
         // --- Services ---
         services.AddScoped<IUserService, UserService>();
@@ -37,6 +38,7 @@ public static class AppServicesExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICmsService, CmsService>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ISearchService, SearchService>();
 
         // --- Email ---
         services.AddOptions();
