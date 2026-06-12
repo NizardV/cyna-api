@@ -92,4 +92,69 @@ public class CatalogService : ICatalogService
             }).ToList(),
         };
     }
+
+    /// <inheritdoc />
+    public async Task<CategoryCatalogPageDto> GetCategoryCatalogAsync(
+        string slug,
+        string? q,
+        decimal? maxPrice,
+        bool available,
+        int page,
+        int pageSize,
+        string locale)
+    {
+
+        _logger.Info(
+            "Recherche catalogue par catégorie — slug={Slug}, q={Q}, page={Page}, pageSize={PageSize}, locale={Locale}",
+            slug, q, page, pageSize, locale);
+
+        page = Math.Max(1, page);
+        pageSize = pageSize > 0 ? pageSize : DefaultPageSize;
+
+        var (category, items, total) = await _catalogRepository.GetCategoryCatalogAsync(
+            slug, q, maxPrice, available, page, pageSize, locale);
+
+        if (category == null)
+        {
+            _logger.Warn("Catégorie introuvable pour le slug : {Slug}", slug);
+            throw new KeyNotFoundException($"La catégorie avec le slug '{slug}' est introuvable.");
+        }
+
+        var totalPages = Math.Max(1, (int)Math.Ceiling((double)total / pageSize));
+        var catTranslation = category.Translations.FirstOrDefault();
+
+        return new CategoryCatalogPageDto
+        {
+            Total = total,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = totalPages,
+
+            // Données de la bannière
+            CategoryName = catTranslation?.Name ?? category.Slug,
+            CategoryDescription = catTranslation?.Description,
+            CategoryImageUrl = category.ImageUrl,
+
+            // Mapping des produits (Identique à ton collègue pour la consistance)
+            Items = items.Select(p =>
+            {
+                var translation = p.Translations.FirstOrDefault();
+                return new ProductDto
+                {
+                    Id = p.Id,
+                    Name = translation?.Name ?? p.Slug,
+                    Description = translation?.Description ?? string.Empty,
+                    Status = p.Status?.ToString() ?? string.Empty,
+                    ImageUrl = p.Images.FirstOrDefault()?.ImageUrl,
+                    Price = p.PricingPlans
+                        .SelectMany(pp => pp.PricingTiers.Select(t => new {
+                            Price = t.PricePerUnit * (1 - pp.DiscountPercent / 100m)
+                        }))
+                        .Select(x => x.Price)
+                        .DefaultIfEmpty(0)
+                        .Min()
+                };
+            }).ToList()
+        };
+    }
 }
