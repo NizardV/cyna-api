@@ -10,6 +10,7 @@ namespace Application.Services;
 using Domain.Dto.Dashboard;
 
 using Interfaces;
+using Tools;
 
 /// <summary>
 /// Service de statistiques du dashboard admin.
@@ -62,7 +63,7 @@ public class DashboardService : IDashboardService
     private static RevenueStatsDto BuildMockRevenueStats(DateTime start, DateTime end)
     {
         var faker     = new Faker { Random = new Randomizer(MockSeed) };
-        var byMonth   = GenerateMonthlyRange(start, end);
+        var byMonth   = RangeHelper.GenerateMonthlyRange(start, end);
         var revenueByMonth = byMonth
             .Select(m => new MonthlyRevenueDto
             {
@@ -111,7 +112,7 @@ public class DashboardService : IDashboardService
     private static OrderStatsDto BuildMockOrderStats(DateTime start, DateTime end)
     {
         var faker   = new Faker { Random = new Randomizer(MockSeed) };
-        var byMonth = GenerateMonthlyRange(start, end)
+        var byMonth = RangeHelper.GenerateMonthlyRange(start, end)
             .Select(m => new MonthlyOrderCountDto
             {
                 Year  = m.Year,
@@ -161,7 +162,7 @@ public class DashboardService : IDashboardService
     private static UserStatsDto BuildMockUserStats(DateTime start, DateTime end)
     {
         var faker   = new Faker { Random = new Randomizer(MockSeed) };
-        var byMonth = GenerateMonthlyRange(start, end)
+        var byMonth = RangeHelper.GenerateMonthlyRange(start, end)
             .Select(m => new MonthlyUserCountDto
             {
                 Year  = m.Year,
@@ -203,7 +204,7 @@ public class DashboardService : IDashboardService
     private static SubscriptionStatsDto BuildMockSubscriptionStats(DateTime start, DateTime end)
     {
         var faker   = new Faker { Random = new Randomizer(MockSeed) };
-        var byMonth = GenerateMonthlyRange(start, end)
+        var byMonth = RangeHelper.GenerateMonthlyRange(start, end)
             .Select(m => new MonthlySubscriptionCountDto
             {
                 Year  = m.Year,
