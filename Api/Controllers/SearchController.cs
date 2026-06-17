@@ -20,15 +20,15 @@ public class SearchController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    private readonly ICatalogService _catalogService;
+    private readonly ISearchService _searchService;
 
     /// <summary>
     /// Initialise une nouvelle instance de <see cref="SearchController"/>.
     /// </summary>
-    /// <param name="catalogService">Le service catalogue.</param>
-    public SearchController(ICatalogService catalogService)
+    /// <param name="searchService">Le service catalogue.</param>
+    public SearchController(ISearchService searchService)
     {
-        _catalogService = catalogService;
+        _searchService = searchService;
     }
 
     // -------------------------------------------------------------------------
@@ -76,7 +76,7 @@ public class SearchController : ControllerBase
             "GET /recherche/catalog — q={Q}, page={Page}, pageSize={PageSize}, sortBy={SortBy}",
             q, page, pageSize, sortBy);
 
-        var result = await _catalogService.GetProductsAsync(
+        var result = await _searchService.GetProductsAsync(
             q, categoryIds, maxPrice, available, sortBy, page, pageSize, locale);
 
         return Ok(result);

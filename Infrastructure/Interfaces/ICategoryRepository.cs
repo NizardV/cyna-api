@@ -4,6 +4,8 @@ using Domain.Entities.Catalogue;
 
 using Entities;
 
+using Tools;
+
 /// <summary>
 /// Interface du dépôt de gestion des catégories.
 /// Couvre les opérations CRUD et la liste paginée avec filtres.

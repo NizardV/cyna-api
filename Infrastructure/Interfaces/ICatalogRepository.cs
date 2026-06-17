@@ -9,24 +9,16 @@ using Domain.Entities.Catalogue;
 public interface ICatalogRepository
 {
     /// <summary>
-    /// Récupère les produits du catalogue avec filtres, tri et pagination côté base de données.
+    /// Récupère les détails d'une catégorie spécifique et ses produits avec un tri métier strict (Catalog Priority).
+    /// Utilisé pour la page de navigation "Catalogue par Catégorie".
     /// </summary>
-    /// <param name="q">Recherche textuelle sur le nom et la description (optionnel).</param>
-    /// <param name="categoryIds">Liste d'identifiants de catégories pour filtrer (optionnel).</param>
-    /// <param name="maxPrice">Prix mensuel maximum (optionnel).</param>
-    /// <param name="available">Si true, retourne uniquement les produits disponibles.</param>
-    /// <param name="sortBy">Critère de tri : relevance | price_asc | price_desc | name.</param>
-    /// <param name="page">Numéro de page (base 1).</param>
+    /// <param name="slug">Le slug unique identifiant la catégorie.</param>
+    /// <param name="q">Texte de recherche appliqué au sein de cette catégorie.</param>
+    /// <param name="maxPrice">Prix unitaire maximum autorisé.</param>
+    /// <param name="available">Filtre sur les produits disponibles.</param>
+    /// <param name="page">Numéro de la page (base 1).</param>
     /// <param name="pageSize">Nombre d'éléments par page.</param>
-    /// <param name="locale">Langue des traductions à inclure.</param>
-    /// <returns>Un tuple contenant les produits de la page et le nombre total de résultats.</returns>
-    Task<(IEnumerable<Product> Items, int Total)> GetProductsAsync(
-        string? q,
-        IEnumerable<int>? categoryIds,
-        decimal? maxPrice,
-        bool available,
-        string sortBy,
-        int page,
-        int pageSize,
-        string locale);
+    /// <param name="locale">Langue pour les traductions ("fr" ou "en").</param>
+    Task<(Category? Category, IEnumerable<Product> Items, int Total)> GetCategoryCatalogAsync(
+        string slug, string? q, decimal? maxPrice, bool available, int page, int pageSize, string locale);
 }

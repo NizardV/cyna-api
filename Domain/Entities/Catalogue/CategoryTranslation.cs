@@ -2,7 +2,7 @@ namespace Domain.Entities.Catalogue;
 
 using System.ComponentModel.DataAnnotations;
 
-using Infrastructure.Entities;
+using Tools;
 
 public class CategoryTranslation
 {

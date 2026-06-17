@@ -55,6 +55,7 @@ public class UserController : ControllerBase
     /// <response code="200">Profil récupéré avec succès.</response>
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="404">Utilisateur introuvable.</response>
+    [Authorize]
     [HttpGet("profile")]
     [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -94,6 +95,7 @@ public class UserController : ControllerBase
     /// <response code="400">Données invalides.</response>
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="404">Utilisateur introuvable.</response>
+    [Authorize]
     [HttpPut("profile")]
     [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -182,6 +184,7 @@ public class UserController : ControllerBase
     /// <returns>La liste des commandes avec leurs articles et factures.</returns>
     /// <response code="200">Commandes récupérées avec succès.</response>
     /// <response code="401">Utilisateur non authentifié.</response>
+    [Authorize]
     [HttpGet("orders")]
     [ProducesResponseType(typeof(IEnumerable<OrderSummaryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -212,6 +215,7 @@ public class UserController : ControllerBase
     /// <returns>La liste des abonnements.</returns>
     /// <response code="200">Abonnements récupérés avec succès.</response>
     /// <response code="401">Utilisateur non authentifié.</response>
+    [Authorize]
     [HttpGet("subscriptions")]
     [ProducesResponseType(typeof(IEnumerable<SubscriptionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

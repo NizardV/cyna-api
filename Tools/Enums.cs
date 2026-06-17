@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Infrastructure.Entities;
+namespace Tools;
 
 public enum UserRole
 {

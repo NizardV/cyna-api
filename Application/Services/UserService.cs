@@ -1,8 +1,8 @@
+namespace Application.Services;
+
 using Application.Interfaces;
 
 using NLog;
-
-namespace Application.Services;
 
 using Domain.Dto.User;
 
@@ -24,7 +24,6 @@ public class UserService : IUserService
     /// Initialise une nouvelle instance de <see cref="UserService"/>.
     /// </summary>
     /// <param name="userRepository">Le dépôt utilisateur.</param>
-    /// <param name="passwordHasher">Le service de hachage de mot de passe.</param>
     public UserService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
@@ -62,7 +61,7 @@ public class UserService : IUserService
         user.LastName  = dto.LastName;
         user.Email     = dto.Email;
 
-        await _userRepository.UpdateProfileAsync(user);
+        await _userRepository.UpdateAsync(user);
 
         _logger.Info("Profil mis à jour avec succès pour l'utilisateur ID {UserId}", userId);
 

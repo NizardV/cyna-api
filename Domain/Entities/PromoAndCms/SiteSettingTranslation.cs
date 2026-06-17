@@ -2,7 +2,7 @@ namespace Domain.Entities.PromoAndCms;
 
 using System.ComponentModel.DataAnnotations;
 
-using Infrastructure.Entities;
+using Tools;
 
 public class SiteSettingTranslation
 {

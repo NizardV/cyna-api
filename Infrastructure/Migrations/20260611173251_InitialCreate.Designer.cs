@@ -5,71 +5,78 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Infrastructure.Migrations
+namespace Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260605070242_InitModifyCyna")]
-    partial class InitModifyCyna
+    [Migration("20260611173251_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AddressLine1")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("AddressLine2")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasMaxLength(2)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(2)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("Region")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -78,30 +85,32 @@ namespace Infrastructure.Migrations
                     b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.PaymentMethod", b =>
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.PaymentMethod", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CardBrand")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("CardLast4")
                         .IsRequired()
                         .HasMaxLength(4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(4)");
 
                     b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("StripePaymentMethodId")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -113,22 +122,24 @@ namespace Infrastructure.Migrations
                     b.ToTable("PaymentMethods");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.EmailVerificationCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.EmailVerificationCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(10)");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -137,22 +148,24 @@ namespace Infrastructure.Migrations
                     b.ToTable("EmailVerificationCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.PasswordResetCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.PasswordResetCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(10)");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -161,26 +174,269 @@ namespace Infrastructure.Migrations
                     b.ToTable("PasswordResetCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.CartItem", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<int>("PricingPlanId")
-                        .HasColumnType("INTEGER");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.CategoryTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Locale")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId", "Locale")
+                        .IsUnique();
+
+                    b.ToTable("CategoryTranslations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BillingPeriod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DiscountPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxDevicesCheckout")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxUsersCheckout")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("PricingPlans");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingTier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("PricePerUnit")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("PricingPlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("maxQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("minQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("unitType")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PricingPlanId");
+
+                    b.ToTable("PricingTiers");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TechnicalSpecs")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Locale")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "Locale")
+                        .IsUnique();
+
+                    b.ToTable("ProductTranslations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Company", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PricingPlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("QuantityDevices")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("QuantityUsers")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -193,243 +449,29 @@ namespace Infrastructure.Migrations
                     b.ToTable("CartItems");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Category", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Invoice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.CategoryTranslation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Locale")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId", "Locale")
-                        .IsUnique();
-
-                    b.ToTable("CategoryTranslations");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BillingPeriod")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DiscountPercent")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("PricingPlans");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingTier", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("PricePerUnit")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PricingPlanId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("maxQuantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("minQuantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("unitType")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PricingPlanId");
-
-                    b.ToTable("PricingTiers");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TechnicalSpecs")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductImages");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductTranslation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Locale")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId", "Locale")
-                        .IsUnique();
-
-                    b.ToTable("ProductTranslations");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Company", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Companies");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Invoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("IssuedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PdfUrl")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
@@ -441,32 +483,34 @@ namespace Infrastructure.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BillingAddressId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("StripePaymentIntentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int?>("SubscriptionId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -479,36 +523,44 @@ namespace Infrastructure.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.OrderItem", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PlanNameSnapshot")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("PricingPlanId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ProductNameSnapshot")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("QuantityDevices")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("QuantityUsers")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPriceDevices")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("UnitPriceUsers")
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
 
@@ -521,36 +573,38 @@ namespace Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("AutoRenew")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("CurrentPeriodEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CurrentPeriodStart")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("PricingPlanId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("StripeSubscriptionId")
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -566,48 +620,52 @@ namespace Infrastructure.Migrations
                     b.ToTable("Subscriptions");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlide", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlide", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
                     b.ToTable("CarouselSlides");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlideTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlideTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ButtonText")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Locale")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("SlideId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Subtitle")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -617,20 +675,22 @@ namespace Infrastructure.Migrations
                     b.ToTable("CarouselSlideTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("EscalatedToHuman")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -639,24 +699,26 @@ namespace Infrastructure.Migrations
                     b.ToTable("ChatbotConversations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotMessage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("ConversationId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Sender")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -665,56 +727,22 @@ namespace Infrastructure.Migrations
                     b.ToTable("ChatbotMessages");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ContactMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.OrderPromoCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ContactMessages");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.OrderPromoCode", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AppliedDiscountAmount")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("PromoCodeId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -725,25 +753,27 @@ namespace Infrastructure.Migrations
                     b.ToTable("OrderPromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.PromoCode", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.PromoCode", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("DiscountPercent")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -753,16 +783,18 @@ namespace Infrastructure.Migrations
                     b.ToTable("PromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSetting", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSetting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("SettingKey")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -772,21 +804,23 @@ namespace Infrastructure.Migrations
                     b.ToTable("SiteSettings");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSettingTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSettingTranslation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Locale")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<int>("SettingId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SettingValue")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -796,47 +830,55 @@ namespace Infrastructure.Migrations
                     b.ToTable("SiteSettingTranslations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CompanyId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsEmailVerified")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -848,9 +890,47 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            modelBuilder.Entity("Infrastructure.Entities.PromoAndCms.ContactMessage", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ContactMessages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Addresses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -859,9 +939,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.PaymentMethod", b =>
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.PaymentMethod", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("PaymentMethods")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -870,9 +950,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.EmailVerificationCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.EmailVerificationCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("EmailVerificationCodes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -881,9 +961,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AuthCodes.PasswordResetCode", b =>
+            modelBuilder.Entity("Domain.Entities.AuthCodes.PasswordResetCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("PasswordResetCodes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -892,21 +972,87 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.CartItem", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.CategoryTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.Category", "Category")
+                        .WithMany("Translations")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("PricingPlans")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingTier", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
+                        .WithMany("PricingTiers")
+                        .HasForeignKey("PricingPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PricingPlan");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductImage", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Catalogue.ProductTranslation", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
+                        .WithMany("Translations")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.CartItem", b =>
+                {
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("CartItems")
                         .HasForeignKey("PricingPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("CartItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("CartItems")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -919,75 +1065,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.CategoryTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Invoice", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Category", "Category")
-                        .WithMany("Translations")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("PricingPlans")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingTier", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
-                        .WithMany("PricingTiers")
-                        .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PricingPlan");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Category", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductImage", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("Images")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.ProductTranslation", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
-                        .WithMany("Translations")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Invoice", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("Invoices")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -996,19 +1076,19 @@ namespace Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.AddressAndPayment.Address", "BillingAddress")
+                    b.HasOne("Domain.Entities.AddressAndPayment.Address", "BillingAddress")
                         .WithMany("Orders")
                         .HasForeignKey("BillingAddressId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", "Subscription")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Subscription", "Subscription")
                         .WithMany("Orders")
                         .HasForeignKey("SubscriptionId");
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1021,24 +1101,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.OrderItem", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.OrderItem", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("OrderItems")
                         .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -1048,21 +1128,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Catalogue.PricingPlan", "PricingPlan")
+                    b.HasOne("Domain.Entities.Catalogue.PricingPlan", "PricingPlan")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PricingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.Catalogue.Product", "Product")
+                    b.HasOne("Domain.Entities.Catalogue.Product", "Product")
                         .WithMany("Subscriptions")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Subscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1075,9 +1155,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlideTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlideTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.CarouselSlide", "Slide")
+                    b.HasOne("Domain.Entities.PromoAndCms.CarouselSlide", "Slide")
                         .WithMany("Translations")
                         .HasForeignKey("SlideId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1086,18 +1166,18 @@ namespace Infrastructure.Migrations
                     b.Navigation("Slide");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
+                    b.HasOne("Domain.Entities.User", "User")
                         .WithMany("ChatbotConversations")
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotMessage", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.ChatbotConversation", "Conversation")
+                    b.HasOne("Domain.Entities.PromoAndCms.ChatbotConversation", "Conversation")
                         .WithMany("Messages")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1106,24 +1186,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Conversation");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ContactMessage", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.OrderPromoCode", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.User", "User")
-                        .WithMany("ContactMessages")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.OrderPromoCode", b =>
-                {
-                    b.HasOne("Infrastructure.Domain.OrdersAndSubscriptions.Order", "Order")
+                    b.HasOne("Domain.Entities.OrdersAndSubscriptions.Order", "Order")
                         .WithMany("PromoCodes")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.PromoCode", "PromoCode")
+                    b.HasOne("Domain.Entities.PromoAndCms.PromoCode", "PromoCode")
                         .WithMany("Orders")
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1134,9 +1205,9 @@ namespace Infrastructure.Migrations
                     b.Navigation("PromoCode");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSettingTranslation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSettingTranslation", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.PromoAndCms.SiteSetting", "Setting")
+                    b.HasOne("Domain.Entities.PromoAndCms.SiteSetting", "Setting")
                         .WithMany("Translations")
                         .HasForeignKey("SettingId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1145,28 +1216,37 @@ namespace Infrastructure.Migrations
                     b.Navigation("Setting");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
-                    b.HasOne("Infrastructure.Domain.Company", "Company")
+                    b.HasOne("Domain.Entities.Company", "Company")
                         .WithMany("Users")
                         .HasForeignKey("CompanyId");
 
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.AddressAndPayment.Address", b =>
+            modelBuilder.Entity("Infrastructure.Entities.PromoAndCms.ContactMessage", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("ContactMessages")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Category", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Category", b =>
                 {
                     b.Navigation("Products");
 
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.PricingPlan", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
                 {
                     b.Navigation("CartItems");
 
@@ -1177,7 +1257,7 @@ namespace Infrastructure.Migrations
                     b.Navigation("Subscriptions");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Catalogue.Product", b =>
+            modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
                 {
                     b.Navigation("CartItems");
 
@@ -1192,12 +1272,12 @@ namespace Infrastructure.Migrations
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.Company", b =>
+            modelBuilder.Entity("Domain.Entities.Company", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Order", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
                 {
                     b.Navigation("Invoices");
 
@@ -1206,32 +1286,32 @@ namespace Infrastructure.Migrations
                     b.Navigation("PromoCodes");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.OrdersAndSubscriptions.Subscription", b =>
+            modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.CarouselSlide", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlide", b =>
                 {
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.ChatbotConversation", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
                 {
                     b.Navigation("Messages");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.PromoCode", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.PromoCode", b =>
                 {
                     b.Navigation("Orders");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.PromoAndCms.SiteSetting", b =>
+            modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSetting", b =>
                 {
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Infrastructure.Domain.User", b =>
+            modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Navigation("Addresses");
 

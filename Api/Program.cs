@@ -1,195 +1,126 @@
-using System.Text;
-
-using Api.Interceptors;
-
-using Application.Interfaces;
-
-using Scalar.AspNetCore;
-
-using Application.Services;
+using Api.Extensions;
 
 using Infrastructure.Data;
-using Infrastructure.Interfaces;
-using Infrastructure.Repositories;
-using Api.Security;
 
-using Application.Interfaces.Services;
-
-using Infrastructure.Security;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 using NLog;
 using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
-// Initiation du logger NLog pour la classe courante afin de pouvoir l'utiliser pour logger des messages d'information, d'erreur, etc avant la construction de l'application.
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-logger.Debug("init main");
+using Scalar.AspNetCore;
 
-builder.Services.AddCors(options =>
+try
 {
-    options.AddPolicy("Frontend", policy => policy
-        .WithOrigins("http://localhost:5173")
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials());
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen(options =>
-{
-    // Document de base
-    options.SwaggerDoc("v1", new OpenApiInfo
+    var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+    logger.Debug("init main");
+
+    builder.Services.Configure<CookiePolicyOptions>(options =>
     {
-        Title = "CynaApi API",
-        Version = "v1"
+        options.CheckConsentNeeded = _ => false;
+        options.MinimumSameSitePolicy = SameSiteMode.None;
     });
 
-    // D�finition du sch�ma d�authentification Bearer
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    builder.Services.AddCors(options =>
     {
-        Name = "Authorization",
-        Description = "JWT Authorization header using the Bearer scheme. " +
-                      "Exemple : \"Bearer 12345abcdef\"",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    // Exigence de s�curit� � NOUVELLE SYNTAXE .NET 10 / Swashbuckle 10
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-    {
-        // La cl� doit utiliser **exactement** le m�me nom que dans AddSecurityDefinition
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-    });
-});
-
-var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
-
-builder.Services.AddSingleton<EfSlowQueryInterceptor>();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
-{
-    // Ajoute l'intercepteur commun
-    options.AddInterceptors(serviceProvider.GetRequiredService<EfSlowQueryInterceptor>());
-
-    // Si on est en local (Development), on peut rester sur SQLite
-    if (builder.Environment.IsDevelopment())
-    {
-        options.UseSqlite(connectionString);
-    }
-    else
-    {
-        // En Staging et Production (sur OVH), on utilise PostgreSQL
-        options.UseNpgsql(connectionString);
-    }
-
-    // Fix: décalage de version EF tools (10.0.7) vs runtime (10.0.8)
-    options.ConfigureWarnings(warnings =>
-        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
-
-});
-
-// Jwt options
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-
-// Authentification / JWT
-var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
-var keyBytes = Encoding.UTF8.GetBytes(jwtConfig.Key);
-
-builder.Services
-    .AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+        options.AddPolicy("Frontend", policy =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtConfig.Issuer,
-            ValidAudience = jwtConfig.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-
-builder.Services.AddAuthorization();
-
-// DI m�tiers
-// --- Dépôts (Infrastructure → Domain) ---
-builder.Services.AddScoped<IUserRepository,         UserRepository>();
-builder.Services.AddScoped<IOrderRepository,        OrderRepository>();
-builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-builder.Services.AddScoped<ICatalogRepository,      CatalogRepository>();
-builder.Services.AddScoped<ICartRepository,         CartRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
-// --- Services (Application) ---
-builder.Services.AddScoped<IUserService,         UserService>();
-builder.Services.AddScoped<IOrderService,        OrderService>();
-builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
-builder.Services.AddScoped<ICatalogService,      CatalogService>();
-builder.Services.AddScoped<IAuthService,         AuthService>();
-builder.Services.AddScoped<ICartService,         CartService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-
-// --- Auth utilisateur (MockCurrentUserService tant que l'auth JWT n'est pas active) ---
-builder.Services.AddScoped<ICurrentUserService, MockCurrentUserService>();
-
-// Générateur de Token JWT
-builder.Services.AddSingleton<ITokenGenerator, JwtTokenGenerator>();
-
-var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await context.Database.MigrateAsync();
-
-    if (args.Contains("--seed") && !app.Environment.IsProduction())
-    {
-        await DbInitializer.SeedAsync(context);
-    }
-}
-if (!app.Environment.IsProduction())
-{
-    app.MapOpenApi();
-
-    if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-            options.RoutePrefix = string.Empty;
+            if (builder.Environment.IsDevelopment())
+                policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+                      .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            else if (builder.Environment.IsStaging())
+                policy.WithOrigins("https://staging.projet-cyna.fr")
+                      .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+            else
+                policy.WithOrigins("https://projet-cyna.fr", "https://www.projet-cyna.fr")
+                      .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
-    }
-    else
+    });
+
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddOpenApi();
+    builder.Services.AddSwaggerGen(options =>
     {
-        app.MapScalarApiReference();
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = "CynaApi API", Version = "v1" });
+        options.CustomSchemaIds(type => type.FullName);
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Description = "JWT Authorization header using the Bearer scheme. Exemple : \"Bearer 12345abcdef\"",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        });
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+    });
+
+    // Extensions
+    builder.Services.AddDatabase(builder.Configuration, builder.Environment);
+    builder.Services.AddJwtAuth(builder.Configuration);
+    builder.Services.AddAppServices(builder.Configuration);
+    builder.Services.AddHealthChecks();
+
+    var app = builder.Build();
+
+    // Migrations + seed
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+
+        if (args.Contains("--seed") && !app.Environment.IsProduction())
+            await DbInitializer.SeedAsync(context);
     }
+
+    // Docs (hors prod)
+    var apiDocs = builder.Configuration["ApiDocs"] ?? "Scalar";
+    if (!app.Environment.IsProduction())
+    {
+        app.MapOpenApi();
+
+        if (apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase))
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(o =>
+            {
+                o.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                o.RoutePrefix = string.Empty;
+            });
+        }
+        else
+        {
+            app.MapScalarApiReference();
+        }
+
+        app.MapGet("/", () => Results.Redirect(
+            apiDocs.Equals("Swagger", StringComparison.OrdinalIgnoreCase) ? "/swagger" : "/scalar/v1"
+        ));
+    }
+
+    app.MapHealthChecks("/health");
+
+    // Pipeline middleware (ordre important)
+    app.UseHttpsRedirection();   // 1. HTTPS
+    app.UseCors("Frontend");     // 2. CORS
+    app.UseCookiePolicy();       // 3. Cookies
+    app.UseAuthentication();     // 4. Auth
+    app.UseAuthorization();      // 5. Autorisation
+    app.MapControllers();        // 6. Routes
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+    logger.Fatal(ex, "Application failed to start");
+    throw;
 }
 
-app.UseCors("Frontend");
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+public partial class Program;

@@ -15,10 +15,11 @@ public static class ClaimsHelper
     /// <exception cref="UnauthorizedAccessException">Si le claim d'identifiant est absent ou invalide.</exception>
     public static int GetUserId(ClaimsPrincipal user)
     {
-        var claim = user.FindFirst(ClaimTypes.NameIdentifier)
-                    ?? user.FindFirst("sub");
+        var claim = user.FindFirst("id")
+                 ?? user.FindFirst(ClaimTypes.NameIdentifier)
+                 ?? user.FindFirst("sub");
 
-        if (claim is null || !int.TryParse(claim.Value, out var userId))
+        if (claim == null || !int.TryParse(claim.Value, out var userId))
         {
             throw new UnauthorizedAccessException("Identifiant utilisateur introuvable dans le token.");
         }

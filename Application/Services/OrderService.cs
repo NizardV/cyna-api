@@ -13,6 +13,8 @@ using Infrastructure.Interfaces;
 
 using Interfaces;
 
+using Tools;
+
 /// <summary>
 /// Service de gestion de l'historique des commandes utilisateur.
 /// Mappe les entités de la base de données vers les DTOs de l'API.

@@ -1,0 +1,93 @@
+trigger:
+  branches:
+    include: [ "main", "dev" ]
+
+pool:
+  name: 'CyanPool'
+
+variables:
+  - group: 'GHCR'
+  - name: FULL_IMAGE
+    value: 'ghcr.io/nizardv/cyna-api'
+
+  - name: envName
+    value: 'staging'
+
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+      - name: envName
+        value: 'prod'
+  - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev') }}:
+      - name: envName
+        value: 'staging'
+
+stages:
+- stage: CI
+  displayName: 'CI — Build, Test, Push [ $(envName) ]'
+  jobs:
+  - job: Build
+    steps:
+
+    # ── 1. .NET SDK ────────────────────────────────────────────────
+    - task: UseDotNet@2
+      displayName: 'Use .NET SDK 10.x'
+      inputs:
+        packageType: 'sdk'
+        version: '10.x'
+
+    # ── 2. SonarCloud ──────────────────────────────────────────────
+    - task: SonarCloudPrepare@3
+      displayName: 'SonarCloud : Prepare'
+      inputs:
+        SonarCloud: 'SonarCloud-CYNA'
+        organization: '2028di1p5g3'
+        scannerMode: 'dotnet'
+        projectKey: '2028DI1P5G3_Cyna-Api'
+        projectName: 'CYNA - Backend Web'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet restore'
+      inputs:
+        command: 'restore'
+        projects: 'CynaApi.sln'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet build'
+      inputs:
+        command: 'build'
+        projects: 'CynaApi.sln'
+        arguments: '--configuration Release --no-restore'
+
+    # ── 3. Tests unitaires ─────────────────────────────────────────
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet test'
+      inputs:
+        command: 'test'
+        projects: 'UnitTests/UnitTests.csproj'
+        arguments: '--configuration Release --no-build --collect:"XPlat Code Coverage"'
+      continueOnError: true
+
+    - task: SonarCloudAnalyze@3
+      displayName: 'SonarCloud : Analyze'
+
+    # ── 4. Login GHCR ──────────────────────────────────────────────
+    - task: Docker@2
+      displayName: 'Login GHCR'
+      inputs:
+        command: login
+        containerRegistry: 'GHCR-Cyna-Connection'
+
+    # ── 5. Build image ─────────────────────────────────────────────
+    - script: |
+        docker build \
+          -t $(FULL_IMAGE):$(envName) \
+          -t $(FULL_IMAGE):sha-$(Build.SourceVersion) \
+          -t $(FULL_IMAGE):build-$(Build.BuildId) \
+          .
+      displayName: 'Docker Build [ $(envName) ]'
+
+    # ── 6. Push → GHCR ─────────────────────────────────────────────
+    - script: |
+        docker push $(FULL_IMAGE):$(envName)
+        docker push $(FULL_IMAGE):sha-$(Build.SourceVersion)
+        docker push $(FULL_IMAGE):build-$(Build.BuildId)
+      displayName: 'Docker Push → GHCR [ $(envName) ]'

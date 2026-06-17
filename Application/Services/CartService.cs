@@ -11,6 +11,12 @@ using Domain.Entities.Catalogue;
 
 using Infrastructure.Entities;
 
+using Tools;
+
+/// <summary>
+/// Implémentation du service de gestion du panier d'achat.
+/// Applique les paliers de prix dégressive et calcule les montants HT, TVA et TTC.
+/// </summary>
 public class CartService : ICartService
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -19,6 +25,10 @@ public class CartService : ICartService
 
     private readonly ICartRepository _cartRepository;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="CartService"/>.
+    /// </summary>
+    /// <param name="cartRepository">Le dépôt du panier d'achat.</param>
     public CartService(ICartRepository cartRepository)
     {
         _cartRepository = cartRepository;

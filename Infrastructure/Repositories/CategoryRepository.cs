@@ -10,6 +10,8 @@ using Domain.Entities.Catalogue;
 
 using Interfaces;
 
+using Tools;
+
 /// <summary>
 /// Implémentation EF Core du dépôt des catégories.
 /// </summary>
@@ -19,6 +21,10 @@ public class CategoryRepository : ICategoryRepository
 
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="CategoryRepository"/>.
+    /// </summary>
+    /// <param name="context">Le contexte de base de données.</param>
     public CategoryRepository(AppDbContext context)
     {
         _context = context;

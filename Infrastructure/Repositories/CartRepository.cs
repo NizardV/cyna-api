@@ -10,12 +10,19 @@ namespace Infrastructure.Repositories;
 using Domain.Entities.Catalogue;
 using Domain.Entities.OrdersAndSubscriptions;
 
+/// <summary>
+/// Implémentation du dépôt du panier d'achat via Entity Framework Core.
+/// </summary>
 public class CartRepository : ICartRepository
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly AppDbContext _context;
 
+    /// <summary>
+    /// Initialise une nouvelle instance de <see cref="CartRepository"/>.
+    /// </summary>
+    /// <param name="context">Le contexte de base de données.</param>
     public CartRepository(AppDbContext context)
     {
         _context = context;
