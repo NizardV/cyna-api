@@ -7,6 +7,8 @@ using Application.Interfaces;
 
 using Domain.Dto.Category;
 
+using Microsoft.AspNetCore.Authorization;
+
 using Tools;
 
 using ILogger = NLog.ILogger;
@@ -18,6 +20,7 @@ using ILogger = NLog.ILogger;
 [ApiController]
 [Route("categories")]
 [Produces("application/json")]
+[Authorize(Roles = "Admin")]
 public class AdminCategoryController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
@@ -61,6 +64,7 @@ public class AdminCategoryController : ControllerBase
     /// <returns>La liste des catégories triées par ordre d'affichage.</returns>
     /// <response code="200">Catégories récupérées avec succès.</response>
     /// <response code="400">Locale inconnue.</response>
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<CategoryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,6 +93,7 @@ public class AdminCategoryController : ControllerBase
     /// <returns>Page de catégories avec métadonnées de pagination.</returns>
     /// <response code="200">Liste retournée avec succès.</response>
     /// <response code="400">Paramètres invalides.</response>
+    [AllowAnonymous]
     [HttpGet("search")]
     [ProducesResponseType(typeof(CategoryPageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -122,6 +127,7 @@ public class AdminCategoryController : ControllerBase
     /// <param name="id">Identifiant de la catégorie.</param>
     /// <response code="200">Catégorie trouvée.</response>
     /// <response code="404">Catégorie introuvable.</response>
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
