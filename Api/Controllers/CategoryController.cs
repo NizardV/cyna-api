@@ -21,13 +21,13 @@ using ILogger = NLog.ILogger;
 [Route("categories")]
 [Produces("application/json")]
 [Authorize(Roles = "Admin")]
-public class AdminCategoryController : ControllerBase
+public class CategoryController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly ICategoryService _service;
 
-    public AdminCategoryController(ICategoryService service)
+    public CategoryController(ICategoryService service)
     {
         _service = service;
     }
