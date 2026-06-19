@@ -134,11 +134,11 @@ stages:
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -f docker-compose.$(envName).yml pull api
+                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml pull api
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
 
           # ── STEP 5 : Health check ──
           - task: SSH@0
