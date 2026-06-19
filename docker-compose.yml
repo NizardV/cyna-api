@@ -1,0 +1,65 @@
+# docker-compose.yml — Cyna-Api
+# Déploie : PostgreSQL + API ASP.NET Core
+# Usage local  : docker compose up -d
+# Usage OVH    : docker compose -f docker-compose.yml up -d
+#
+# Variables attendues dans un fichier .env (non commité) :
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   ASPNETCORE_ENVIRONMENT  (Development | Staging | Production)
+#   JWT_SECRET              (clé secrète JWT)
+
+services:
+
+  # ─── Base de données ───────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: cyna-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-cyna}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB:       ${POSTGRES_DB:-cynadb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Exposé uniquement en local pour les migrations manuelles.
+      # Sur OVH, retirez ce mapping pour ne pas exposer la BDD.
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyna} -d ${POSTGRES_DB:-cynadb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── API ASP.NET Core ──────────────────────────────────────────────
+  api:
+    image: ghcr.io/nizardv/cyna-api:${ENV_NAME:-latest}
+    # En dev/local, build depuis les sources :
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    container_name: cyna-server-${ENV_NAME:-local}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT:  ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS:         http://+:8080
+      # Connection string injectée via variable d'environnement
+      # (surcharge appsettings.json — préféré à y mettre le mot de passe)
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;
+        Database=${POSTGRES_DB:-cynadb};
+        Username=${POSTGRES_USER:-cyna};
+        Password=${POSTGRES_PASSWORD:-changeme};
+        Pooling=true;
+      JwtSettings__Secret: ${JWT_SECRET:-CHANGE_ME_IN_PROD}
+    ports:
+      # Production  → 127.0.0.1:4000 (derrière nginx/reverse proxy)
+      # Staging     → 127.0.0.1:4001
+      - "127.0.0.1:${API_PORT:-4000}:8080"
+
+volumes:
+  postgres_data:
+    driver: local
