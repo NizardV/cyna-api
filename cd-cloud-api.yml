@@ -12,8 +12,6 @@ variables:
   - group: 'GHCR'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
-  - name: RAW_BRANCH
-    value: $(resources.pipeline['ci-api'].sourceBranch)
 stages:
 - stage: CD_Cloud
   displayName: 'CD Cloud — Deploy OVH'
@@ -26,7 +24,7 @@ stages:
           steps:
           # ── STEP 1 : Calcul des variables ──
           - bash: |
-              BRANCH_NAME=$(echo "$(RAW_BRANCH)" | sed 's|refs/heads/||')
+              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
               echo "Pipeline déclenché par la branche : $BRANCH_NAME"
               if [ "$BRANCH_NAME" = "main" ]; then
                 echo "##vso[task.setvariable variable=envName]prod"
@@ -44,6 +42,8 @@ stages:
                 echo "##vso[task.setvariable variable=IS_PROD]false"
               fi
             displayName: "Calcul dynamique de l'environnement cible"
+            env:
+              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
 
           # ── STEP 2 : Versioning (prod uniquement) ──
           - bash: |
@@ -52,7 +52,6 @@ stages:
                 exit 0
               fi
 
-              # Récupère le dernier tag vX.Y.Z
               git fetch --tags
               LAST_TAG=$(git tag --sort=-v:refname | grep -E '^api/v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
 
@@ -67,7 +66,6 @@ stages:
               MINOR=$(echo $VERSION | cut -d. -f2)
               PATCH=$(echo $VERSION | cut -d. -f3)
 
-              # Analyse les commits depuis le dernier tag
               COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
               echo "Commits depuis $LAST_TAG :"
               echo "$COMMITS"
@@ -93,7 +91,6 @@ stages:
               echo "##vso[task.setvariable variable=NEW_VERSION]$NEW_VERSION"
               echo "##vso[task.setvariable variable=NEW_TAG]$NEW_TAG"
 
-              # Crée le tag via l'API Azure DevOps
               curl -s -X POST \
                 "https://dev.azure.com/2028DI1P5G3/DIIAGE%202028%20DI1%20P5%20G3/_apis/git/repositories/Cyna-Api/refs?api-version=7.1" \
                 -H "Content-Type: application/json" \
