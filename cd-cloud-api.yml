@@ -12,8 +12,6 @@ variables:
   - group: 'GHCR'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
-  - name: RAW_BRANCH
-    value: $(resources.pipeline['ci-api'].sourceBranch)
 stages:
 - stage: CD_Cloud
   displayName: 'CD Cloud — Deploy OVH'
@@ -26,7 +24,7 @@ stages:
           steps:
           # ── STEP 1 : Calcul des variables ──
           - bash: |
-              BRANCH_NAME=$(echo "$RAW_BRANCH" | sed 's|refs/heads/||')
+              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
               echo "Pipeline déclenché par la branche : $BRANCH_NAME"
               if [ "$BRANCH_NAME" = "main" ]; then
                 echo "##vso[task.setvariable variable=envName]prod"
@@ -43,7 +41,7 @@ stages:
               fi
             displayName: "Calcul dynamique de l'environnement cible"
             env:
-              RAW_BRANCH: $(RAW_BRANCH)
+              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
 
           # ── STEP 2 : Versioning (prod uniquement) ──
           - bash: |
@@ -103,8 +101,6 @@ stages:
 
               echo "Tag $NEW_TAG créé ✅"
             displayName: 'Versioning — Calcul et tag Git'
-            env:
-              RAW_BRANCH: $(RAW_BRANCH)
 
           # ── STEP 3 : Tag image Docker avec version (prod uniquement) ──
           - bash: |
@@ -118,8 +114,6 @@ stages:
               docker push $(FULL_IMAGE):$(NEW_VERSION)
               echo "Image taguée $(NEW_VERSION) ✅"
             displayName: 'Tag image Docker avec version'
-            env:
-              RAW_BRANCH: $(RAW_BRANCH)
 
           # ── STEP 4 : Déploiement SSH ──
           - task: SSH@0
