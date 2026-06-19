@@ -28,12 +28,14 @@ stages:
               echo "Pipeline déclenché par la branche : $BRANCH_NAME"
               if [ "$BRANCH_NAME" = "main" ]; then
                 echo "##vso[task.setvariable variable=envName]prod"
+                echo "##vso[task.setvariable variable=composeProject]cyna-prod"
                 echo "##vso[task.setvariable variable=targetEnv]PROD"
                 echo "##vso[task.setvariable variable=API_PORT]4000"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
                 echo "##vso[task.setvariable variable=IS_PROD]true"
               else
                 echo "##vso[task.setvariable variable=envName]staging"
+                echo "##vso[task.setvariable variable=composeProject]cyna-staging"
                 echo "##vso[task.setvariable variable=targetEnv]DEV"
                 echo "##vso[task.setvariable variable=API_PORT]4001"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
@@ -131,11 +133,11 @@ stages:
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -f docker-compose.$(envName).yml pull api
+                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml pull api
                 ENV_NAME=$(envName) \
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
 
           # ── STEP 5 : Health check ──
           - task: SSH@0
