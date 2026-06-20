@@ -11,6 +11,8 @@ using Domain.Dto.Dashboard;
 
 using Interfaces;
 
+using Tools;
+
 /// <summary>
 /// Implémentation EF Core du dépôt de statistiques du dashboard admin.
 /// Toutes les requêtes filtrent sur <c>CreatedAt</c> (commandes, abonnements) ou
