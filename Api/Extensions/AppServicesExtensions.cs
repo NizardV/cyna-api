@@ -51,6 +51,8 @@ public static class AppServicesExtensions
         else
             services.AddScoped<IPaymentService, MockPaymentService>();
 
+        services.AddScoped<ICheckoutService, CheckoutService>();
+
         // --- Email ---
         services.AddOptions();
         services.AddHttpClient<ResendClient>();

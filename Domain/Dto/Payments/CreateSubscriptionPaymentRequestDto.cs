@@ -20,6 +20,12 @@ public class CreateSubscriptionPaymentRequestDto
 /// </summary>
 public class PaymentLineDto
 {
+    /// <summary>L'identifiant du produit (pour la métadonnée Stripe et la réconciliation webhook).</summary>
+    public int ProductId { get; set; }
+
+    /// <summary>L'identifiant du plan tarifaire (pour la métadonnée Stripe et la réconciliation webhook).</summary>
+    public int PricingPlanId { get; set; }
+
     /// <summary>Le nom du produit (snapshot, utilisé comme libellé côté Stripe).</summary>
     public string ProductName { get; set; } = string.Empty;
 
