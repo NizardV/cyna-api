@@ -124,6 +124,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
@@ -147,6 +150,9 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
@@ -794,6 +800,9 @@ namespace Infrastructure.Migrations.Postgres
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("INTEGER");
 
@@ -814,6 +823,9 @@ namespace Infrastructure.Migrations.Postgres
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("TwoFactorSecret")
