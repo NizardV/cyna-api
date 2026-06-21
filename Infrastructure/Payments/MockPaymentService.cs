@@ -44,26 +44,37 @@ public class MockPaymentService : IPaymentService
     {
         var customerId = await EnsureCustomerAsync(user);
 
-        // Stripe crée un paiement (et un abonnement) par intervalle de facturation.
-        var groups = request.Lines.GroupBy(l => l.BillingPeriod).ToList();
-
-        var clientSecrets = groups
-            .Select(_ => $"pi_mock_{Guid.NewGuid():N}_secret_mock")
+        // Une "subscription" factice par ligne récurrente (1:1 avec la Subscription locale).
+        var subscriptions = request.Lines
+            .Where(l => l.BillingPeriod != BillingPeriod.Lifetime)
+            .Select(l => new RecurringPaymentResultDto
+            {
+                ProductId            = l.ProductId,
+                PricingPlanId        = l.PricingPlanId,
+                BillingPeriod        = l.BillingPeriod,
+                StripeSubscriptionId = $"sub_mock_{Guid.NewGuid():N}",
+                ClientSecret         = $"pi_mock_{Guid.NewGuid():N}_secret_mock",
+            })
             .ToList();
 
-        var subscriptionIds = groups
-            .Where(g => g.Key != BillingPeriod.Lifetime)
-            .Select(_ => $"sub_mock_{Guid.NewGuid():N}")
-            .ToList();
+        string? lifetimePaymentIntentId = null;
+        string? lifetimeClientSecret    = null;
+        if (request.Lines.Any(l => l.BillingPeriod == BillingPeriod.Lifetime))
+        {
+            lifetimePaymentIntentId = $"pi_mock_{Guid.NewGuid():N}";
+            lifetimeClientSecret    = $"{lifetimePaymentIntentId}_secret_mock";
+        }
 
-        _logger.Info("[MOCK] Paiement initialisé pour l'utilisateur ID {UserId} ({Count} paiement(s))",
-            user.Id, clientSecrets.Count);
+        _logger.Info("[MOCK] Paiement initialisé pour la commande {OrderId} ({Count} abonnement(s))",
+            request.OrderId, subscriptions.Count);
 
         return new PaymentInitResultDto
         {
-            CustomerId      = customerId,
-            ClientSecrets   = clientSecrets,
-            SubscriptionIds = subscriptionIds,
+            OrderId                 = request.OrderId,
+            CustomerId              = customerId,
+            Subscriptions           = subscriptions,
+            LifetimePaymentIntentId = lifetimePaymentIntentId,
+            LifetimeClientSecret    = lifetimeClientSecret,
         };
     }
 }

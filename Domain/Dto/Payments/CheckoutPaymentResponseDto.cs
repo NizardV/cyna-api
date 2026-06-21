@@ -5,6 +5,9 @@ namespace Domain.Dto.Payments;
 /// </summary>
 public class CheckoutPaymentResponseDto
 {
+    /// <summary>L'identifiant de la commande locale créée (statut Pending).</summary>
+    public int OrderId { get; set; }
+
     /// <summary>Le premier client secret (cas courant : panier homogène = un seul paiement à confirmer).</summary>
     public string? ClientSecret { get; set; }
 

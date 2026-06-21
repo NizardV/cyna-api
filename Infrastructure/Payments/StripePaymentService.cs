@@ -64,69 +64,70 @@ public class StripePaymentService : IPaymentService
         var customerId = await EnsureCustomerAsync(user);
         var currency   = string.IsNullOrWhiteSpace(request.Currency) ? "eur" : request.Currency.ToLowerInvariant();
 
-        var clientSecrets   = new List<string>();
-        var subscriptionIds = new List<string>();
+        var subscriptions = new List<RecurringPaymentResultDto>();
 
         // Cache produit Stripe par nom : évite de recréer le même produit plusieurs fois dans la requête.
         var productCache = new Dictionary<string, string>();
 
-        // ── Lignes récurrentes : une Subscription Stripe par périodicité ──────
-        var recurringGroups = request.Lines
-            .Where(l => l.BillingPeriod != BillingPeriod.Lifetime)
-            .GroupBy(l => l.BillingPeriod);
-
-        foreach (var group in recurringGroups)
+        // ── Lignes récurrentes : une Subscription Stripe par ligne (1:1 avec la Subscription locale) ──
+        foreach (var line in request.Lines.Where(l => l.BillingPeriod != BillingPeriod.Lifetime))
         {
-            var interval = group.Key == BillingPeriod.Yearly ? "year" : "month";
-
-            var items = new List<SubscriptionItemOptions>();
-            foreach (var line in group)
-            {
-                var productId = await EnsureProductAsync(line.ProductName, productCache);
-                items.Add(new SubscriptionItemOptions
-                {
-                    PriceData = new SubscriptionItemPriceDataOptions
-                    {
-                        Currency   = currency,
-                        Product    = productId,
-                        UnitAmount = ToMinorUnits(line.Amount),
-                        Recurring  = new SubscriptionItemPriceDataRecurringOptions { Interval = interval },
-                    },
-                    Quantity = Math.Max(1, line.Quantity),
-                });
-            }
+            var interval  = line.BillingPeriod == BillingPeriod.Yearly ? "year" : "month";
+            var productId = await EnsureProductAsync(line.ProductName, productCache);
 
             var options = new SubscriptionCreateOptions
             {
-                Customer        = customerId,
-                Items           = items,
+                Customer = customerId,
+                Items =
+                [
+                    new SubscriptionItemOptions
+                    {
+                        PriceData = new SubscriptionItemPriceDataOptions
+                        {
+                            Currency   = currency,
+                            Product    = productId,
+                            UnitAmount = ToMinorUnits(line.Amount),
+                            Recurring  = new SubscriptionItemPriceDataRecurringOptions { Interval = interval },
+                        },
+                        Quantity = Math.Max(1, line.Quantity),
+                    },
+                ],
                 PaymentBehavior = "default_incomplete",
                 PaymentSettings = new SubscriptionPaymentSettingsOptions
                 {
                     SaveDefaultPaymentMethod = "on_subscription",
-                    PaymentMethodTypes       = new List<string> { "card" },
+                    PaymentMethodTypes       = ["card"],
                 },
                 Metadata = new Dictionary<string, string>
                 {
-                    ["userId"]         = user.Id.ToString(),
-                    ["pricingPlanIds"] = string.Join(",", group.Select(l => l.PricingPlanId)),
+                    ["userId"]        = user.Id.ToString(),
+                    ["orderId"]       = request.OrderId.ToString(),
+                    ["pricingPlanId"] = line.PricingPlanId.ToString(),
+                    ["productId"]     = line.ProductId.ToString(),
                 },
             };
             // Récupère le client secret de la première facture pour confirmation côté front.
             options.AddExpand("latest_invoice.confirmation_secret");
 
             var subscription = await _subscriptions.CreateAsync(options);
-            subscriptionIds.Add(subscription.Id);
 
-            var secret = subscription.LatestInvoice?.ConfirmationSecret?.ClientSecret;
-            if (!string.IsNullOrEmpty(secret))
-                clientSecrets.Add(secret);
+            subscriptions.Add(new RecurringPaymentResultDto
+            {
+                ProductId            = line.ProductId,
+                PricingPlanId        = line.PricingPlanId,
+                BillingPeriod        = line.BillingPeriod,
+                StripeSubscriptionId = subscription.Id,
+                ClientSecret         = subscription.LatestInvoice?.ConfirmationSecret?.ClientSecret ?? string.Empty,
+            });
 
-            _logger.Info("Subscription Stripe {SubId} créée ({Interval}) pour l'utilisateur ID {UserId}",
-                subscription.Id, interval, user.Id);
+            _logger.Info("Subscription Stripe {SubId} créée ({Interval}) pour la commande {OrderId}",
+                subscription.Id, interval, request.OrderId);
         }
 
         // ── Lignes "à vie" : un PaymentIntent unique pour le total ────────────
+        string? lifetimePaymentIntentId = null;
+        string? lifetimeClientSecret    = null;
+
         var lifetimeAmount = request.Lines
             .Where(l => l.BillingPeriod == BillingPeriod.Lifetime)
             .Sum(l => l.Amount * Math.Max(1, l.Quantity));
@@ -141,22 +142,25 @@ public class StripePaymentService : IPaymentService
                 AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions { Enabled = true },
                 Metadata = new Dictionary<string, string>
                 {
-                    ["userId"] = user.Id.ToString(),
-                    ["type"]   = "lifetime",
+                    ["userId"]  = user.Id.ToString(),
+                    ["orderId"] = request.OrderId.ToString(),
+                    ["type"]    = "lifetime",
                 },
             });
 
-            if (!string.IsNullOrEmpty(paymentIntent.ClientSecret))
-                clientSecrets.Add(paymentIntent.ClientSecret);
+            lifetimePaymentIntentId = paymentIntent.Id;
+            lifetimeClientSecret    = paymentIntent.ClientSecret;
 
-            _logger.Info("PaymentIntent à vie {PiId} créé pour l'utilisateur ID {UserId}", paymentIntent.Id, user.Id);
+            _logger.Info("PaymentIntent à vie {PiId} créé pour la commande {OrderId}", paymentIntent.Id, request.OrderId);
         }
 
         return new PaymentInitResultDto
         {
-            CustomerId      = customerId,
-            ClientSecrets   = clientSecrets,
-            SubscriptionIds = subscriptionIds,
+            OrderId                 = request.OrderId,
+            CustomerId              = customerId,
+            Subscriptions           = subscriptions,
+            LifetimePaymentIntentId = lifetimePaymentIntentId,
+            LifetimeClientSecret    = lifetimeClientSecret,
         };
     }
 

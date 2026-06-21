@@ -8,6 +8,9 @@ using Tools;
 /// </summary>
 public class CreateSubscriptionPaymentRequestDto
 {
+    /// <summary>L'identifiant de la commande locale (Pending) associée, propagé en métadonnée Stripe.</summary>
+    public int OrderId { get; set; }
+
     /// <summary>Les lignes à facturer.</summary>
     public IReadOnlyList<PaymentLineDto> Lines { get; set; } = [];
 
