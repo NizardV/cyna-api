@@ -26,12 +26,31 @@ public class User
 
     [Required, MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
-    
+
     public UserRole Role { get; set; } = UserRole.User;
     public bool IsEmailVerified { get; set; } = false;
 
+    /// <summary>Indique si le compte a été désactivé par un administrateur.</summary>
+    public bool IsDisabled { get; set; } = false;
+
+    /// <summary>
+    /// Clé secrète TOTP (base32). Peut être renseignée alors que le 2FA n'est
+    /// PAS encore actif — voir <see cref="TwoFactorEnabled"/>. Tant que
+    /// l'activation n'a pas été confirmée via un premier code valide, la
+    /// présence de cette clé ne doit JAMAIS bloquer la connexion standard,
+    /// sous peine de verrouiller l'admin hors de son compte.
+    /// </summary>
     [MaxLength(100)]
     public string? TwoFactorSecret { get; set; }
+
+    /// <summary>
+    /// Indique si le 2FA est réellement actif (confirmé via un premier code TOTP valide).
+    /// C'est CE flag — et non la simple présence de <see cref="TwoFactorSecret"/> —
+    /// qui doit être utilisé pour décider si la connexion standard doit être bloquée
+    /// et si /auth/admin/login doit exiger un code TOTP.
+    /// </summary>
+    public bool TwoFactorEnabled { get; set; } = false;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public int? CompanyId { get; set; }
