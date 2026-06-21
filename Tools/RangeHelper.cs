@@ -7,7 +7,7 @@ public class RangeHelper
     /// Génère la liste des mois (year, month) couverts par [start, end), bornée à 24 mois
     /// pour éviter une explosion si le filtre "all"/"year" couvre une longue plage.
     /// </summary>
-    private static List<(int Year, int Month)> GenerateMonthlyRange(DateTime start, DateTime end)
+    public static List<(int Year, int Month)> GenerateMonthlyRange(DateTime start, DateTime end)
     {
         var safeStart = start < end.AddYears(-2) ? end.AddYears(-2) : start;
 
