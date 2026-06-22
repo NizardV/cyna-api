@@ -1,8 +1,7 @@
-using Infrastructure.Payments;
+using Api.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using NLog;
 
@@ -28,13 +27,13 @@ public class PaymentTestController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-    private readonly StripeOptions _stripeOptions;
+    private readonly StripeTestHelper _stripe;
     private readonly IWebHostEnvironment _env;
 
-    public PaymentTestController(IOptions<StripeOptions> stripeOptions, IWebHostEnvironment env)
+    public PaymentTestController(StripeTestHelper stripe, IWebHostEnvironment env)
     {
-        _stripeOptions = stripeOptions.Value;
-        _env           = env;
+        _stripe = stripe;
+        _env    = env;
     }
 
     /// <summary>Abonnement de test (1 €/mois) payé immédiatement avec la carte fournie.</summary>
@@ -46,7 +45,6 @@ public class PaymentTestController : ControllerBase
     {
         if (!_env.IsDevelopment()) return NotFound();
         dto ??= new PaymentTestRequestDto();
-        StripeConfiguration.ApiKey = _stripeOptions.SecretKey;
 
         var customer = await new CustomerService().CreateAsync(new CustomerCreateOptions
         {
@@ -86,7 +84,7 @@ public class PaymentTestController : ControllerBase
         subOptions.AddExpand("latest_invoice.confirmation_secret");
 
         var subscription = await new SubscriptionService().CreateAsync(subOptions);
-        var paymentIntentId = PaymentIntentIdFrom(subscription.LatestInvoice?.ConfirmationSecret?.ClientSecret);
+        var paymentIntentId = StripeTestHelper.PaymentIntentIdFrom(subscription.LatestInvoice?.ConfirmationSecret?.ClientSecret);
 
         try
         {
@@ -95,12 +93,12 @@ public class PaymentTestController : ControllerBase
                 PaymentMethod = dto.PaymentMethod,
                 ReturnUrl     = "https://example.com/return",
             });
-            return Ok(SuccessResult(pi, dto, subscription.Id));
+            return Ok(StripeTestHelper.SuccessResult(pi, dto, subscription.Id));
         }
         catch (StripeException ex)
         {
             _logger.Warn(ex, "Paiement test abonnement refusé (carte {Card})", dto.PaymentMethod);
-            return Ok(DeclineResult(ex, dto, subscription.Id));
+            return Ok(StripeTestHelper.DeclineResult(ex, dto, subscription.Id));
         }
     }
 
@@ -113,7 +111,6 @@ public class PaymentTestController : ControllerBase
     {
         if (!_env.IsDevelopment()) return NotFound();
         dto ??= new PaymentTestRequestDto();
-        StripeConfiguration.ApiKey = _stripeOptions.SecretKey;
 
         var customer = await new CustomerService().CreateAsync(new CustomerCreateOptions
         {
@@ -136,54 +133,12 @@ public class PaymentTestController : ControllerBase
                 },
                 Metadata = new Dictionary<string, string> { ["test"] = "true" },
             });
-            return Ok(SuccessResult(pi, dto, subscriptionId: null));
+            return Ok(StripeTestHelper.SuccessResult(pi, dto, subscriptionId: null));
         }
         catch (StripeException ex)
         {
             _logger.Warn(ex, "Paiement test achat refusé (carte {Card})", dto.PaymentMethod);
-            return Ok(DeclineResult(ex, dto, subscriptionId: null));
+            return Ok(StripeTestHelper.DeclineResult(ex, dto, subscriptionId: null));
         }
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private static object SuccessResult(PaymentIntent pi, PaymentTestRequestDto dto, string? subscriptionId)
-    {
-        var label = pi.Status switch
-        {
-            "succeeded"        => "✅ Paiement réussi",
-            "requires_action"  => "🔐 Authentification 3D Secure requise (à finaliser côté front)",
-            _                  => $"⚠️ Statut : {pi.Status}",
-        };
-
-        return new
-        {
-            result          = label,
-            status          = pi.Status,
-            amount          = $"{dto.AmountCents / 100m:0.00} EUR",
-            card            = dto.PaymentMethod,
-            paymentIntentId = pi.Id,
-            subscriptionId,
-        };
-    }
-
-    private static object DeclineResult(StripeException ex, PaymentTestRequestDto dto, string? subscriptionId) => new
-    {
-        result      = "❌ Paiement refusé",
-        status      = "declined",
-        amount      = $"{dto.AmountCents / 100m:0.00} EUR",
-        card        = dto.PaymentMethod,
-        declineCode = ex.StripeError?.DeclineCode,
-        errorCode   = ex.StripeError?.Code,
-        message     = ex.StripeError?.Message ?? ex.Message,
-        subscriptionId,
-    };
-
-    /// <summary>Extrait l'identifiant du PaymentIntent (pi_...) à partir d'un client secret (pi_..._secret_...).</summary>
-    private static string PaymentIntentIdFrom(string? clientSecret)
-    {
-        if (string.IsNullOrEmpty(clientSecret)) return string.Empty;
-        var idx = clientSecret.IndexOf("_secret_", StringComparison.Ordinal);
-        return idx > 0 ? clientSecret[..idx] : clientSecret;
     }
 }
