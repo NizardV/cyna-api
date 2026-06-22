@@ -141,29 +141,45 @@ stages:
                 git pull origin main
                 cd docker-compose/
 
+                if [ "$(envName)" = "prod" ]; then
+                  DB_PWD="$DB_PASSWORD_PROD_ENV"
+                  JWT_KEY="$JWT_SECRET_KEY_PROD_ENV"
+                  STRIPE_SK="$STRIPE_SECRET_KEY_PROD_ENV"
+                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_PROD_ENV"
+                else
+                  DB_PWD="$DB_PASSWORD_STAGING_ENV"
+                  JWT_KEY="$JWT_SECRET_KEY_STAGING_ENV"
+                  STRIPE_SK="$STRIPE_SECRET_KEY_STAGING_ENV"
+                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
+                fi
+
                 echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
 
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                DB_PASSWORD="$DB_PASSWORD_ENV" \
-                JWT_SECRET_KEY="$JWT_SECRET_KEY_ENV" \
-                STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY_ENV" \
-                STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET_ENV" \
+                DB_PASSWORD="$DB_PWD" \
+                JWT_SECRET_KEY="$JWT_KEY" \
+                STRIPE_SECRET_KEY="$STRIPE_SK" \
+                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
                   docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml pull api
 
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                DB_PASSWORD="$DB_PASSWORD_ENV" \
-                JWT_SECRET_KEY="$JWT_SECRET_KEY_ENV" \
-                STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY_ENV" \
-                STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET_ENV" \
+                DB_PASSWORD="$DB_PWD" \
+                JWT_SECRET_KEY="$JWT_KEY" \
+                STRIPE_SECRET_KEY="$STRIPE_SK" \
+                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
                   docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
             env:
-              GHCR_PAT_ENV:               $(GHCR_PAT)
-              DB_PASSWORD_ENV:            $(DB_PASSWORD)
-              JWT_SECRET_KEY_ENV:         $(JWT_SECRET_KEY)
-              STRIPE_SECRET_KEY_ENV:      $(STRIPE_SECRET_KEY)
-              STRIPE_WEBHOOK_SECRET_ENV:  $(STRIPE_WEBHOOK_SECRET)
+              GHCR_PAT_ENV:                      $(GHCR_PAT)
+              DB_PASSWORD_PROD_ENV:              $(DB_PASSWORD_PROD)
+              DB_PASSWORD_STAGING_ENV:           $(DB_PASSWORD_STAGING)
+              JWT_SECRET_KEY_PROD_ENV:           $(JWT_SECRET_KEY_PROD)
+              JWT_SECRET_KEY_STAGING_ENV:        $(JWT_SECRET_KEY_STAGING)
+              STRIPE_SECRET_KEY_PROD_ENV:        $(STRIPE_SECRET_KEY_PROD)
+              STRIPE_SECRET_KEY_STAGING_ENV:     $(STRIPE_SECRET_KEY_STAGING)
+              STRIPE_WEBHOOK_SECRET_PROD_ENV:    $(STRIPE_WEBHOOK_SECRET_PROD)
+              STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
           # ── STEP 5 : Health check ──
           - task: SSH@0
