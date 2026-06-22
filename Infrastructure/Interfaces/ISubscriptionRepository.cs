@@ -15,4 +15,13 @@ public interface ISubscriptionRepository
     /// <param name="userId">L'identifiant de l'utilisateur.</param>
     /// <returns>La liste des abonnements.</returns>
     Task<IEnumerable<Subscription>> GetByUserIdAsync(int userId);
+
+    /// <summary>Ajoute plusieurs abonnements.</summary>
+    Task AddRangeAsync(IEnumerable<Subscription> subscriptions);
+
+    /// <summary>Récupère un abonnement suivi par EF via son identifiant Stripe.</summary>
+    Task<Subscription?> GetByStripeIdAsync(string stripeSubscriptionId);
+
+    /// <summary>Met à jour un abonnement.</summary>
+    Task UpdateAsync(Subscription subscription);
 }

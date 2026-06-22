@@ -41,4 +41,22 @@ public class SubscriptionRepository : ISubscriptionRepository
             .OrderByDescending(s => s.CurrentPeriodEnd)
             .ToListAsync();
     }
+
+    /// <inheritdoc />
+    public async Task AddRangeAsync(IEnumerable<Subscription> subscriptions)
+    {
+        await _context.Subscriptions.AddRangeAsync(subscriptions);
+        await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Subscription?> GetByStripeIdAsync(string stripeSubscriptionId)
+        => await _context.Subscriptions.FirstOrDefaultAsync(s => s.StripeSubscriptionId == stripeSubscriptionId);
+
+    /// <inheritdoc />
+    public async Task UpdateAsync(Subscription subscription)
+    {
+        _context.Subscriptions.Update(subscription);
+        await _context.SaveChangesAsync();
+    }
 }
