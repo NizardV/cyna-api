@@ -10,8 +10,11 @@ pool:
   name: 'CyanPool'
 variables:
   - group: 'GHCR'
+  - group: 'CYNA-PROD'
+  - group: 'CYNA-STAGING'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
+
 stages:
 - stage: CD_Cloud
   displayName: 'CD Cloud — Deploy OVH'
@@ -25,25 +28,38 @@ stages:
           # ── STEP 1 : Calcul des variables ──
           - bash: |
               BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
-              echo "Pipeline déclenché par la branche : $BRANCH_NAME"
               if [ "$BRANCH_NAME" = "main" ]; then
                 echo "##vso[task.setvariable variable=envName]prod"
                 echo "##vso[task.setvariable variable=composeProject]cyna-prod"
-                echo "##vso[task.setvariable variable=targetEnv]PROD"
                 echo "##vso[task.setvariable variable=API_PORT]4000"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
                 echo "##vso[task.setvariable variable=IS_PROD]true"
+                echo "##vso[task.setvariable variable=DB_PASSWORD]$DB_PASSWORD_PROD_ENV"
+                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$JWT_SECRET_KEY_PROD_ENV"
+                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$STRIPE_SECRET_KEY_PROD_ENV"
+                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$STRIPE_WEBHOOK_SECRET_PROD_ENV"
               else
                 echo "##vso[task.setvariable variable=envName]staging"
                 echo "##vso[task.setvariable variable=composeProject]cyna-staging"
-                echo "##vso[task.setvariable variable=targetEnv]DEV"
                 echo "##vso[task.setvariable variable=API_PORT]4001"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
                 echo "##vso[task.setvariable variable=IS_PROD]false"
+                echo "##vso[task.setvariable variable=DB_PASSWORD]$DB_PASSWORD_STAGING_ENV"
+                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$JWT_SECRET_KEY_STAGING_ENV"
+                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$STRIPE_SECRET_KEY_STAGING_ENV"
+                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
               fi
             displayName: "Calcul dynamique de l'environnement cible"
             env:
               BUILD_SOURCEBRANCH: $(Build.SourceBranch)
+              DB_PASSWORD_PROD_ENV:             $(DB_PASSWORD_PROD)
+              DB_PASSWORD_STAGING_ENV:          $(DB_PASSWORD_STAGING)
+              JWT_SECRET_KEY_PROD_ENV:          $(JWT_SECRET_KEY_PROD)
+              JWT_SECRET_KEY_STAGING_ENV:       $(JWT_SECRET_KEY_STAGING)
+              STRIPE_SECRET_KEY_PROD_ENV:       $(STRIPE_SECRET_KEY_PROD)
+              STRIPE_SECRET_KEY_STAGING_ENV:    $(STRIPE_SECRET_KEY_STAGING)
+              STRIPE_WEBHOOK_SECRET_PROD_ENV:   $(STRIPE_WEBHOOK_SECRET_PROD)
+              STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
           # ── STEP 2 : Versioning (prod uniquement) ──
           - bash: |
@@ -60,24 +76,18 @@ stages:
                 echo "Aucun tag trouvé, départ depuis $LAST_TAG"
               fi
 
-              echo "Dernier tag : $LAST_TAG"
               VERSION=${LAST_TAG#api/v}
               MAJOR=$(echo $VERSION | cut -d. -f1)
               MINOR=$(echo $VERSION | cut -d. -f2)
               PATCH=$(echo $VERSION | cut -d. -f3)
 
               COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
-              echo "Commits depuis $LAST_TAG :"
-              echo "$COMMITS"
-
               BUMP="patch"
               if echo "$COMMITS" | grep -qE '^feat!:|^fix!:|^refactor!:'; then
                 BUMP="major"
               elif echo "$COMMITS" | grep -qE '^feat:'; then
                 BUMP="minor"
               fi
-
-              echo "Bump détecté : $BUMP"
 
               case $BUMP in
                 major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
@@ -87,7 +97,6 @@ stages:
 
               NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
               NEW_TAG="api/${NEW_VERSION}"
-              echo "Nouvelle version : $NEW_TAG"
               echo "##vso[task.setvariable variable=NEW_VERSION]$NEW_VERSION"
               echo "##vso[task.setvariable variable=NEW_TAG]$NEW_TAG"
 
@@ -118,6 +127,8 @@ stages:
             displayName: 'Tag image Docker avec version'
 
           # ── STEP 4 : Déploiement SSH ──
+          # Les secrets sont injectés via env: et passés en préfixe de la commande docker compose
+          # (les variables ADO ne s'interpolent pas dans le bloc inline SSH)
           - task: SSH@0
             displayName: 'Deploy API sur OVH via Docker Compose'
             inputs:
@@ -125,19 +136,50 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
+                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
                 cd ~/cyna-infra
                 git pull origin main
                 cd docker-compose/
+
+                if [ "$(envName)" = "prod" ]; then
+                  DB_PWD="$DB_PASSWORD_PROD_ENV"
+                  JWT_KEY="$JWT_SECRET_KEY_PROD_ENV"
+                  STRIPE_SK="$STRIPE_SECRET_KEY_PROD_ENV"
+                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_PROD_ENV"
+                else
+                  DB_PWD="$DB_PASSWORD_STAGING_ENV"
+                  JWT_KEY="$JWT_SECRET_KEY_STAGING_ENV"
+                  STRIPE_SK="$STRIPE_SECRET_KEY_STAGING_ENV"
+                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
+                fi
+
                 echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
-                ENV_NAME=$(envName) \
+
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml pull api
-                ENV_NAME=$(envName) \
+                DB_PASSWORD="$DB_PWD" \
+                JWT_SECRET_KEY="$JWT_KEY" \
+                STRIPE_SECRET_KEY="$STRIPE_SK" \
+                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
+                  docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml pull api
+
                 API_PORT=$(API_PORT) \
                 ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+                DB_PASSWORD="$DB_PWD" \
+                JWT_SECRET_KEY="$JWT_KEY" \
+                STRIPE_SECRET_KEY="$STRIPE_SK" \
+                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
+                  docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+            env:
+              GHCR_PAT_ENV:                      $(GHCR_PAT)
+              DB_PASSWORD_PROD_ENV:              $(DB_PASSWORD_PROD)
+              DB_PASSWORD_STAGING_ENV:           $(DB_PASSWORD_STAGING)
+              JWT_SECRET_KEY_PROD_ENV:           $(JWT_SECRET_KEY_PROD)
+              JWT_SECRET_KEY_STAGING_ENV:        $(JWT_SECRET_KEY_STAGING)
+              STRIPE_SECRET_KEY_PROD_ENV:        $(STRIPE_SECRET_KEY_PROD)
+              STRIPE_SECRET_KEY_STAGING_ENV:     $(STRIPE_SECRET_KEY_STAGING)
+              STRIPE_WEBHOOK_SECRET_PROD_ENV:    $(STRIPE_WEBHOOK_SECRET_PROD)
+              STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
           # ── STEP 5 : Health check ──
           - task: SSH@0
