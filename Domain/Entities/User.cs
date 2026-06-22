@@ -30,6 +30,10 @@ public class User
     public UserRole Role { get; set; } = UserRole.User;
     public bool IsEmailVerified { get; set; } = false;
 
+    /// <summary>Identifiant du client Stripe associé (cus_...), créé au premier paiement.</summary>
+    [MaxLength(255)]
+    public string? StripeCustomerId { get; set; }
+
     [MaxLength(100)]
     public string? TwoFactorSecret { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
