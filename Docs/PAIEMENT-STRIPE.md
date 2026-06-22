@@ -1,11 +1,22 @@
-# 💳 Documentation — Paiement Stripe (Backend)
+# 💳 Paiement Stripe — Vue d'ensemble
 
-Ce document décrit l'intégration des paiements Stripe dans l'API Cyna : architecture, flux,
-couches, endpoints, webhook, configuration et tests.
+Ce document est le **point d'entrée** de la documentation Stripe. Il couvre la philosophie, le
+flux général et l'architecture. Les détails sont dans les fichiers dédiés ci-dessous.
 
 > **En une phrase** : le backend crée la commande en `Pending` + l'abonnement Stripe, le front
 > confirme le paiement par carte, et le **webhook Stripe** confirme la commande en `Paid`
 > (source de vérité). Une bascule **Mock / Stripe** permet de développer sans connexion réseau.
+
+---
+
+## 🗂️ Table des matières
+
+| Fichier | Contenu |
+|---|---|
+| **PAIEMENT-STRIPE.md** ← *ici* | Philosophie, flux complet, architecture couches, modèle de données |
+| [PAIEMENT-STRIPE-API.md](PAIEMENT-STRIPE-API.md) | Endpoints, webhook (events + idempotence) |
+| [PAIEMENT-STRIPE-CONFIG.md](PAIEMENT-STRIPE-CONFIG.md) | Configuration, secrets, Stripe CLI, mise en production, sécurité |
+| [PAIEMENT-STRIPE-TEST.md](PAIEMENT-STRIPE-TEST.md) | Guide de test, cartes de test, cheat sheet, limites connues |
 
 ---
 
@@ -124,83 +135,6 @@ flowchart TD
 
 ---
 
-## 🧩 Les endpoints
-
-| Méthode | Route | Auth | Rôle |
-|---|---|---|---|
-| `POST` | `/payments/subscription` | ✅ JWT | Crée la commande `Pending` + le paiement Stripe, renvoie le(s) `clientSecret` |
-| `POST` | `/payments/webhook` | ❌ Anonyme | Reçoit les events Stripe (signature vérifiée) → confirme la commande |
-| `POST` | `/payments/test/subscription` | ❌ Anonyme *(dev only)* | Abonnement 1 €/mois payé immédiatement avec une carte de test |
-| `POST` | `/payments/test/one-time` | ❌ Anonyme *(dev only)* | Achat unique 1 € payé immédiatement avec une carte de test |
-
-### `POST /payments/subscription`
-
-**Requête** — l'adresse seule ; les articles sont lus depuis le panier serveur :
-```json
-{ "address": { "firstName": "Jean", "lastName": "Dupont", "line1": "12 rue de la Paix",
-               "postalCode": "75001", "city": "Paris", "country": "FR" } }
-```
-**Réponse** :
-```json
-{
-  "orderId": 28,
-  "clientSecret": "pi_..._secret_...",
-  "clientSecrets": ["pi_..._secret_..."],
-  "subscriptionIds": ["sub_..."],
-  "publishableKey": "pk_test_..."
-}
-```
-
----
-
-## 🪝 Le webhook (source de vérité)
-
-Endpoint `[AllowAnonymous]` qui lit le **corps brut**, vérifie la signature via
-`EventUtility.ConstructEvent(json, signature, WebhookSecret, tolérance, throwOnApiVersionMismatch=false)`,
-puis dispatche.
-
-| Event Stripe | Effet en base |
-|---|---|
-| `invoice.paid` | `Subscription → Active`, `Order → Paid`, crée `Invoice`, vide le panier |
-| `payment_intent.succeeded` *(metadata `type=lifetime`)* | `Order → Paid`, crée `Invoice`, vide le panier |
-| `invoice.payment_failed` | `Order → Failed` |
-| `customer.subscription.updated` | Synchronise le statut de l'abonnement |
-| `customer.subscription.deleted` | `Subscription → Cancelled` |
-
-**Réconciliation** : le lien event → commande locale passe par les **métadonnées Stripe**
-(`orderId`, lues sur `invoice.Parent.SubscriptionDetails.Metadata` — sans appel API supplémentaire)
-et par l'`StripeSubscriptionId` (index unique).
-
-**Idempotence** :
-* `Order → Paid` seulement si la commande n'est pas déjà `Paid`.
-* Une seule `Invoice` par commande (`InvoiceExistsForOrderAsync`).
-* Les events redélivrés par Stripe sont donc sans effet de bord.
-
----
-
-## ⚙️ Configuration & secrets
-
-```jsonc
-// appsettings.json (versionné — valeurs non secrètes / placeholders vides)
-"Payments": { "Provider": "Mock", "Currency": "eur" },
-"Stripe":   { "SecretKey": "", "PublishableKey": "", "WebhookSecret": "" }
-```
-
-| Clé | Où la mettre | Source |
-|---|---|---|
-| `Stripe:SecretKey` (`sk_test_…`) | `appsettings.Development.json` (gitignoré) / env var | Dashboard → API keys |
-| `Stripe:PublishableKey` (`pk_test_…`) | idem | Dashboard → API keys |
-| `Stripe:WebhookSecret` (`whsec_…`) | idem | `stripe listen` (local) ou Dashboard → Webhooks (serveur) |
-
-> ⚠️ **Jamais** de clé dans `appsettings.json` (versionné). Les vraies clés vivent dans
-> `appsettings.Development.json` (gitignoré), `appsettings.Staging/Production.json` (gitignorés)
-> ou des variables d'environnement.
-
-**Bascule Mock ↔ Stripe** : `Payments:Provider`. Le DI (`AppServicesExtensions`) enregistre
-l'implémentation correspondante ; `Mock` reste le défaut sûr.
-
----
-
 ## 🗃️ Modèle de données & cycle de vie
 
 Champs Stripe en base : `Order.StripePaymentIntentId`, `Subscription.StripeSubscriptionId`
@@ -215,76 +149,3 @@ stateDiagram-v2
     Paid --> [*]
 ```
 *États `Order` : `Pending → Paid | Failed`. États `Subscription` : `Pending → Active | Cancelled | Suspended`.*
-
----
-
-## 🧪 Guide de test (mode test Stripe)
-
-1. `appsettings.Development.json` → `Payments:Provider = "Stripe"` + clés `sk_test_` / `pk_test_`.
-2. Webhook local :
-   ```
-   stripe listen --forward-to https://localhost:7169/payments/webhook
-   ```
-   → copier le `whsec_…` dans `Stripe:WebhookSecret`, relancer l'API.
-3. Test rapide via Swagger/Scalar — routes `payments/test/*`, body :
-   ```json
-   { "amountCents": 100, "paymentMethod": "pm_card_visa" }
-   ```
-
-| `paymentMethod` | Résultat |
-|---|---|
-| `pm_card_visa` / `pm_card_mastercard` / `pm_card_amex` | ✅ `succeeded` |
-| `pm_card_chargeDeclined` | ❌ `declined` (`generic_decline`) |
-| `pm_card_chargeDeclinedInsufficientFunds` | ❌ `insufficient_funds` |
-| `pm_card_authenticationRequired` | 🔐 `requires_action` (3DS) |
-
-> Numéros de carte (front Elements) : `4242 4242 4242 4242` (succès), `4000 0000 0000 9995`
-> (fonds insuffisants), `4000 0025 0000 3155` (3DS). Date future + CVC quelconques.
-
----
-
-## 🚀 Mise en production
-
-* **Pas de `stripe listen`** en déployé : on enregistre l'endpoint dans le **Dashboard → Webhooks**
-  avec l'URL publique HTTPS (`https://.../payments/webhook`) ; Stripe pousse directement les events.
-* Chaque environnement (dev local, staging, prod) a **son propre endpoint + son propre `whsec_`**.
-* Le `WebhookSecret` du serveur va en **variable d'environnement** (`Stripe__WebhookSecret`).
-* L'endpoint doit être **public et en HTTPS** (Stripe refuse le http).
-
----
-
-## 🔒 Sécurité
-
-* Signature du webhook **toujours vérifiée** (`whsec_`) → rejet `400` si invalide.
-* Montants **recalculés côté serveur** — le front ne peut pas imposer un prix.
-* Endpoint webhook `[AllowAnonymous]` mais protégé par la signature ; aucun autre endpoint de
-  paiement n'est anonyme (hors routes de test, **dev only**, qui renvoient `404` en production).
-* Clés secrètes hors du dépôt.
-
----
-
-## ⚠️ Limites connues & évolutions
-
-| Sujet | État actuel | Évolution possible |
-|---|---|---|
-| Produits Stripe | Créés à la volée (dédup intra-requête) | Persister `Product.StripeProductId` |
-| TVA | 20 % calculé par ligne | Stripe Tax |
-| Panier multi-périodicités | Plusieurs `clientSecret` (front gère le 1er) | Confirmation séquentielle côté front |
-| Commande `Pending` orpheline | Possible si l'appel Stripe échoue après création locale | Job de nettoyage des `Pending` expirés |
-| Codes promo | Non appliqués au montant Stripe | Intégration `coupons` Stripe |
-| Gestion abonnement | Pas d'annulation côté user | Portail client Stripe |
-
----
-
-## 📋 Cheat sheet
-
-| Besoin | Commande |
-|---|---|
-| Démarrer l'API (https) | `dotnet run --project Api --launch-profile https` |
-| Démarrer + re-seed | `dotnet run --project Api -- --seed` |
-| Build complet | `dotnet build CynaApi.sln` |
-| Écouter les webhooks | `stripe listen --forward-to https://localhost:7169/payments/webhook` |
-| Payer un PI de test | `stripe payment_intents confirm pi_XXX --payment-method pm_card_visa` |
-| Migration EF (⚠️ provider Postgres) | `DatabaseProvider=postgres ConnectionStrings__DefaultConnection="Host=localhost;Database=cyna;Username=postgres;Password=postgres" dotnet ef migrations add <Nom> -p Infrastructure -s Api` |
-| User de test | `teststripe@cyna.fr` / `Test123!` |
-| Plan mensuel de test | `pricingPlanId = 1` |
