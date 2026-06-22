@@ -28,21 +28,26 @@ stages:
           # ── STEP 1 : Calcul des variables ──
           - bash: |
               BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
-              echo "Pipeline déclenché par la branche : $BRANCH_NAME"
               if [ "$BRANCH_NAME" = "main" ]; then
                 echo "##vso[task.setvariable variable=envName]prod"
                 echo "##vso[task.setvariable variable=composeProject]cyna-prod"
                 echo "##vso[task.setvariable variable=API_PORT]4000"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
                 echo "##vso[task.setvariable variable=IS_PROD]true"
-                echo "##vso[task.setvariable variable=varGroup]CYNA-PROD"
+                echo "##vso[task.setvariable variable=DB_PASSWORD]$(DB_PASSWORD_PROD)"
+                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$(JWT_SECRET_KEY_PROD)"
+                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$(STRIPE_SECRET_KEY_PROD)"
+                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$(STRIPE_WEBHOOK_SECRET_PROD)"
               else
                 echo "##vso[task.setvariable variable=envName]staging"
                 echo "##vso[task.setvariable variable=composeProject]cyna-staging"
                 echo "##vso[task.setvariable variable=API_PORT]4001"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
                 echo "##vso[task.setvariable variable=IS_PROD]false"
-                echo "##vso[task.setvariable variable=varGroup]CYNA-STAGING"
+                echo "##vso[task.setvariable variable=DB_PASSWORD]$(DB_PASSWORD_STAGING)"
+                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$(JWT_SECRET_KEY_STAGING)"
+                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$(STRIPE_SECRET_KEY_STAGING)"
+                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$(STRIPE_WEBHOOK_SECRET_STAGING)"
               fi
             displayName: "Calcul dynamique de l'environnement cible"
             env:
