@@ -136,6 +136,10 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
+                echo "DEBUG envName='$(envName)'"
+                echo "DEBUG DB_STAGING vide?='$DB_PASSWORD_STAGING_ENV'"
+                echo "DEBUG DB_PROD vide?='$DB_PASSWORD_PROD_ENV'"
+
                 echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
                 cd ~/cyna-infra
                 git pull origin main
