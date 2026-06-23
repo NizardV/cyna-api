@@ -24,32 +24,10 @@ stages:
     displayName: 'Deploy Staging'
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
     environment: 'OVH-Cloud'
-    variables:
-      - group: 'CYNA-STAGING'
     strategy:
       runOnce:
         deploy:
           steps:
-          # ── STEP 1 : Écriture du .env.staging sur le VPS ──
-          - task: SSH@0
-            displayName: 'Écriture du .env.staging'
-            inputs:
-              sshEndpoint: 'OVH-SSH-Connection'
-              runOptions: 'inline'
-              failOnStdErr: false
-              inline: |
-                echo "DEBUG DB_PWD='$DB_PWD'"
-                printf "DB_PASSWORD=%s\nJWT_SECRET_KEY=%s\nSTRIPE_SECRET_KEY=%s\nSTRIPE_WEBHOOK_SECRET=%s\nAPI_PORT=4001\nASPNETCORE_ENVIRONMENT=Staging\n" \
-                  "$DB_PWD" "$JWT_KEY" "$STRIPE_SK" "$STRIPE_WH" \
-                  > ~/cyna-infra/docker-compose/.env.staging
-                echo ".env.staging écrit ✅"
-            env:
-              DB_PWD:    $(DB_PASSWORD_STAGING)
-              JWT_KEY:   $(JWT_SECRET_KEY_STAGING)
-              STRIPE_SK: $(STRIPE_SECRET_KEY_STAGING)
-              STRIPE_WH: $(STRIPE_WEBHOOK_SECRET_STAGING)
-
-          # ── STEP 2 : Déploiement ──
           - task: SSH@0
             displayName: 'Deploy API staging'
             inputs:
@@ -66,7 +44,6 @@ stages:
             env:
               GHCR_PAT_ENV: $(GHCR_PAT)
 
-          # ── STEP 3 : Health check ──
           - task: SSH@0
             displayName: 'Health check staging'
             inputs:
@@ -84,13 +61,11 @@ stages:
     displayName: 'Deploy Production'
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     environment: 'OVH-Cloud'
-    variables:
-      - group: 'CYNA-PROD'
     strategy:
       runOnce:
         deploy:
           steps:
-          # ── STEP 1 : Versioning ──
+          # ── Versioning ──
           - bash: |
               git fetch --tags
               LAST_TAG=$(git tag --sort=-v:refname | grep -E '^api/v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
@@ -137,7 +112,7 @@ stages:
               echo "Tag $NEW_TAG créé ✅"
             displayName: 'Versioning — Calcul et tag Git'
 
-          # ── STEP 2 : Tag image Docker ──
+          # ── Tag image Docker ──
           - bash: |
               echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
               docker pull $(FULL_IMAGE):prod
@@ -146,25 +121,7 @@ stages:
               echo "Image taguée $(NEW_VERSION) ✅"
             displayName: 'Tag image Docker avec version'
 
-          # ── STEP 3 : Écriture du .env.prod sur le VPS ──
-          - task: SSH@0
-            displayName: 'Écriture du .env.prod'
-            inputs:
-              sshEndpoint: 'OVH-SSH-Connection'
-              runOptions: 'inline'
-              failOnStdErr: false
-              inline: |
-                printf "DB_PASSWORD=%s\nJWT_SECRET_KEY=%s\nSTRIPE_SECRET_KEY=%s\nSTRIPE_WEBHOOK_SECRET=%s\nAPI_PORT=4000\nASPNETCORE_ENVIRONMENT=Production\n" \
-                  "$DB_PWD" "$JWT_KEY" "$STRIPE_SK" "$STRIPE_WH" \
-                  > ~/cyna-infra/docker-compose/.env.prod
-                echo ".env.prod écrit ✅"
-            env:
-              DB_PWD:    $(DB_PASSWORD_PROD)
-              JWT_KEY:   $(JWT_SECRET_KEY_PROD)
-              STRIPE_SK: $(STRIPE_SECRET_KEY_PROD)
-              STRIPE_WH: $(STRIPE_WEBHOOK_SECRET_PROD)
-
-          # ── STEP 4 : Déploiement ──
+          # ── Déploiement ──
           - task: SSH@0
             displayName: 'Deploy API prod'
             inputs:
@@ -181,7 +138,7 @@ stages:
             env:
               GHCR_PAT_ENV: $(GHCR_PAT)
 
-          # ── STEP 5 : Health check ──
+          # ── Health check ──
           - task: SSH@0
             displayName: 'Health check prod'
             inputs:
