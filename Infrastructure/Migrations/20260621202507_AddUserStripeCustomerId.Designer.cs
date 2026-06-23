@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621202507_AddUserStripeCustomerId")]
+    partial class AddUserStripeCustomerId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,9 +138,6 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -163,9 +163,6 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -857,9 +854,6 @@ namespace Infrastructure.Migrations.Postgres
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsDisabled")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
 
@@ -885,9 +879,6 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<string>("StripeCustomerId")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(100)

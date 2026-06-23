@@ -5,6 +5,7 @@ using Application.Interfaces.Services;
 using Application.Services;
 
 using Infrastructure.Interfaces;
+using Infrastructure.Payments;
 using Infrastructure.Repositories;
 
 using Resend;
@@ -42,6 +43,20 @@ public static class AppServicesExtensions
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IDashboardService, DashboardService>();
+
+        // --- Paiement (bascule Mock / Stripe via Payments:Provider) ---
+        services.Configure<PaymentOptions>(config.GetSection("Payments"));
+        services.Configure<StripeOptions>(config.GetSection("Stripe"));
+
+        var paymentProvider = config["Payments:Provider"] ?? "Mock";
+        if (paymentProvider.Equals("Stripe", StringComparison.OrdinalIgnoreCase))
+            services.AddScoped<IPaymentService, StripePaymentService>();
+        else
+            services.AddScoped<IPaymentService, MockPaymentService>();
+
+        services.AddScoped<ICheckoutService, CheckoutService>();
+        services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
+        services.AddScoped<Api.Helpers.StripeTestHelper>();
 
         // --- Email ---
         services.AddOptions();

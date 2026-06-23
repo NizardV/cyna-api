@@ -26,9 +26,13 @@ public class User
 
     [Required, MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
-
+    
     public UserRole Role { get; set; } = UserRole.User;
     public bool IsEmailVerified { get; set; } = false;
+
+    /// <summary>Identifiant du client Stripe associé (cus_...), créé au premier paiement.</summary>
+    [MaxLength(255)]
+    public string? StripeCustomerId { get; set; }
 
     /// <summary>Indique si le compte a été désactivé par un administrateur.</summary>
     public bool IsDisabled { get; set; } = false;
@@ -40,6 +44,7 @@ public class User
     /// présence de cette clé ne doit JAMAIS bloquer la connexion standard,
     /// sous peine de verrouiller l'admin hors de son compte.
     /// </summary>
+    
     [MaxLength(100)]
     public string? TwoFactorSecret { get; set; }
 

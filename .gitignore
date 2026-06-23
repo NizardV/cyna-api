@@ -20,3 +20,5 @@ riderModule.iml
 /Api/CynaApi.db-shm
 /Api/CynaApi.db-wal
 /Api/appsettings.Development.json
+/Api/appsettings.Staging.json
+/Api/appsettings.Production.json
