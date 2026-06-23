@@ -300,8 +300,9 @@ public class AuthController : ControllerBase
     private CookieOptions GetCookieOptions(bool expired = false) => new()
     {
         HttpOnly = true,
-        Secure   = false,          // Set to true in production (HTTPS)
-        SameSite = SameSiteMode.Strict,
+        Secure   = true,          // Set to true in production (HTTPS)
+        SameSite = SameSiteMode.Lax,
+        Domain = ".projet-cyna.fr", // Set to your domain
         Path     = "/",
         Expires  = expired ? DateTime.UtcNow.AddDays(-1) : null
     };
