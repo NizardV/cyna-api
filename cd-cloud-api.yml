@@ -10,8 +10,6 @@ pool:
   name: 'CyanPool'
 variables:
   - group: 'GHCR'
-  - group: 'CYNA-PROD'
-  - group: 'CYNA-STAGING'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
 
@@ -19,39 +17,85 @@ stages:
 - stage: CD_Cloud
   displayName: 'CD Cloud — Deploy OVH'
   jobs:
-  - deployment: Deploy
+  # ══════════════════════════════════════════
+  # JOB STAGING — déclenché sur dev
+  # ══════════════════════════════════════════
+  - deployment: DeployStaging
+    displayName: 'Deploy Staging'
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
     environment: 'OVH-Cloud'
+    variables:
+      - group: 'CYNA-STAGING'
     strategy:
       runOnce:
         deploy:
           steps:
-          # ── STEP 1 : Calcul des variables ──
-          - bash: |
-              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
-              if [ "$BRANCH_NAME" = "main" ]; then
-                echo "##vso[task.setvariable variable=envName]prod"
-                echo "##vso[task.setvariable variable=composeProject]cyna-prod"
-                echo "##vso[task.setvariable variable=API_PORT]4000"
-                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
-                echo "##vso[task.setvariable variable=IS_PROD]true"
-              else
-                echo "##vso[task.setvariable variable=envName]staging"
-                echo "##vso[task.setvariable variable=composeProject]cyna-staging"
-                echo "##vso[task.setvariable variable=API_PORT]4001"
-                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
-                echo "##vso[task.setvariable variable=IS_PROD]false"
-              fi
-            displayName: "Calcul dynamique de l'environnement cible"
+          # ── STEP 1 : Écriture du .env.staging sur le VPS ──
+          - task: SSH@0
+            displayName: 'Écriture du .env.staging'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                cat > ~/cyna-infra/docker-compose/.env.staging << EOF
+                DB_PASSWORD=$DB_PWD
+                JWT_SECRET_KEY=$JWT_KEY
+                STRIPE_SECRET_KEY=$STRIPE_SK
+                STRIPE_WEBHOOK_SECRET=$STRIPE_WH
+                API_PORT=4001
+                ASPNETCORE_ENVIRONMENT=Staging
+                EOF
+                echo ".env.staging écrit ✅"
             env:
-              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
+              DB_PWD:    $(DB_PASSWORD_STAGING)
+              JWT_KEY:   $(JWT_SECRET_KEY_STAGING)
+              STRIPE_SK: $(STRIPE_SECRET_KEY_STAGING)
+              STRIPE_WH: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
-          # ── STEP 2 : Versioning (prod uniquement) ──
+          # ── STEP 2 : Déploiement ──
+          - task: SSH@0
+            displayName: 'Deploy API staging'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
+                cd ~/cyna-infra && git pull origin main
+                cd docker-compose/
+                echo "─── Pull & Relance API staging sur le port 4001 ───"
+                docker compose -p cyna-staging -f docker-compose.staging.yml --env-file .env.staging pull api
+                docker compose -p cyna-staging -f docker-compose.staging.yml --env-file .env.staging up -d --no-build --force-recreate api
+            env:
+              GHCR_PAT_ENV: $(GHCR_PAT)
+
+          # ── STEP 3 : Health check ──
+          - task: SSH@0
+            displayName: 'Health check staging'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                sleep 10
+                curl -f http://localhost:4001/health || exit 1
+
+  # ══════════════════════════════════════════
+  # JOB PROD — déclenché sur main
+  # ══════════════════════════════════════════
+  - deployment: DeployProd
+    displayName: 'Deploy Production'
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    environment: 'OVH-Cloud'
+    variables:
+      - group: 'CYNA-PROD'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # ── STEP 1 : Versioning ──
           - bash: |
-              if [ "$(IS_PROD)" != "true" ]; then
-                echo "Staging — versioning ignoré"
-                exit 0
-              fi
-
               git fetch --tags
               LAST_TAG=$(git tag --sort=-v:refname | grep -E '^api/v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
 
@@ -97,12 +141,8 @@ stages:
               echo "Tag $NEW_TAG créé ✅"
             displayName: 'Versioning — Calcul et tag Git'
 
-          # ── STEP 3 : Tag image Docker avec version (prod uniquement) ──
+          # ── STEP 2 : Tag image Docker ──
           - bash: |
-              if [ "$(IS_PROD)" != "true" ]; then
-                echo "Staging — tag version ignoré"
-                exit 0
-              fi
               echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
               docker pull $(FULL_IMAGE):prod
               docker tag $(FULL_IMAGE):prod $(FULL_IMAGE):$(NEW_VERSION)
@@ -110,77 +150,53 @@ stages:
               echo "Image taguée $(NEW_VERSION) ✅"
             displayName: 'Tag image Docker avec version'
 
-          # ── STEP 4 : Écriture du .env sur le VPS (bash local — résout bien les variable groups) ──
-          - bash: |
-              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
-              if [ "$BRANCH_NAME" = "main" ]; then
-                ENV_NAME="prod"
-                DB_PWD="$DB_PASSWORD_PROD_ENV"
-                JWT_KEY="$JWT_SECRET_KEY_PROD_ENV"
-                STRIPE_SK="$STRIPE_SECRET_KEY_PROD_ENV"
-                STRIPE_WH="$STRIPE_WEBHOOK_SECRET_PROD_ENV"
-                API_PORT="4000"
-                ASPNETCORE_ENV="Production"
-              else
-                ENV_NAME="staging"
-                DB_PWD="$DB_PASSWORD_STAGING_ENV"
-                JWT_KEY="$JWT_SECRET_KEY_STAGING_ENV"
-                STRIPE_SK="$STRIPE_SECRET_KEY_STAGING_ENV"
-                STRIPE_WH="$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
-                API_PORT="4001"
-                ASPNETCORE_ENV="Staging"
-              fi
-
-              echo "Écriture du .env.${ENV_NAME} sur le VPS..."
-
-              ssh -o StrictHostKeyChecking=no debian@213.32.21.169 "cat > ~/cyna-infra/docker-compose/.env.${ENV_NAME} << EOF
-              DB_PASSWORD=${DB_PWD}
-              JWT_SECRET_KEY=${JWT_KEY}
-              STRIPE_SECRET_KEY=${STRIPE_SK}
-              STRIPE_WEBHOOK_SECRET=${STRIPE_WH}
-              API_PORT=${API_PORT}
-              ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENV}
-              EOF"
-
-              echo ".env.${ENV_NAME} écrit ✅"
-            displayName: 'Écriture du .env sur le VPS'
-            env:
-              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
-              DB_PASSWORD_PROD_ENV:              $(DB_PASSWORD_PROD)
-              DB_PASSWORD_STAGING_ENV:           $(DB_PASSWORD_STAGING)
-              JWT_SECRET_KEY_PROD_ENV:           $(JWT_SECRET_KEY_PROD)
-              JWT_SECRET_KEY_STAGING_ENV:        $(JWT_SECRET_KEY_STAGING)
-              STRIPE_SECRET_KEY_PROD_ENV:        $(STRIPE_SECRET_KEY_PROD)
-              STRIPE_SECRET_KEY_STAGING_ENV:     $(STRIPE_SECRET_KEY_STAGING)
-              STRIPE_WEBHOOK_SECRET_PROD_ENV:    $(STRIPE_WEBHOOK_SECRET_PROD)
-              STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
-
-          # ── STEP 5 : Déploiement SSH ──
+          # ── STEP 3 : Écriture du .env.prod sur le VPS ──
           - task: SSH@0
-            displayName: 'Deploy API sur OVH via Docker Compose'
+            displayName: 'Écriture du .env.prod'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                cat > ~/cyna-infra/docker-compose/.env.prod << EOF
+                DB_PASSWORD=$DB_PWD
+                JWT_SECRET_KEY=$JWT_KEY
+                STRIPE_SECRET_KEY=$STRIPE_SK
+                STRIPE_WEBHOOK_SECRET=$STRIPE_WH
+                API_PORT=4000
+                ASPNETCORE_ENVIRONMENT=Production
+                EOF
+                echo ".env.prod écrit ✅"
+            env:
+              DB_PWD:    $(DB_PASSWORD_PROD)
+              JWT_KEY:   $(JWT_SECRET_KEY_PROD)
+              STRIPE_SK: $(STRIPE_SECRET_KEY_PROD)
+              STRIPE_WH: $(STRIPE_WEBHOOK_SECRET_PROD)
+
+          # ── STEP 4 : Déploiement ──
+          - task: SSH@0
+            displayName: 'Deploy API prod'
             inputs:
               sshEndpoint: 'OVH-SSH-Connection'
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
                 echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
-                cd ~/cyna-infra
-                git pull origin main
+                cd ~/cyna-infra && git pull origin main
                 cd docker-compose/
-
-                echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
-                docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml --env-file .env.$(envName) pull api
-                docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml --env-file .env.$(envName) up -d --no-build --force-recreate api
+                echo "─── Pull & Relance API prod sur le port 4000 ───"
+                docker compose -p cyna-prod -f docker-compose.prod.yml --env-file .env.prod pull api
+                docker compose -p cyna-prod -f docker-compose.prod.yml --env-file .env.prod up -d --no-build --force-recreate api
             env:
               GHCR_PAT_ENV: $(GHCR_PAT)
 
-          # ── STEP 6 : Health check ──
+          # ── STEP 5 : Health check ──
           - task: SSH@0
-            displayName: 'Health check post-deploy'
+            displayName: 'Health check prod'
             inputs:
               sshEndpoint: 'OVH-SSH-Connection'
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
                 sleep 10
-                curl -f http://localhost:$(API_PORT)/health || exit 1
+                curl -f http://localhost:4000/health || exit 1
