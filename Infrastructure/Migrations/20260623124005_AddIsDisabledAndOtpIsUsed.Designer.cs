@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260621202507_AddUserStripeCustomerId")]
-    partial class AddUserStripeCustomerId
+    [Migration("20260623124005_AddIsDisabledAndOtpIsUsed")]
+    partial class AddIsDisabledAndOtpIsUsed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -138,6 +138,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -163,6 +166,9 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -854,6 +860,9 @@ namespace Infrastructure.Migrations.Postgres
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
 
@@ -879,6 +888,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<string>("StripeCustomerId")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(100)

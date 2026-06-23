@@ -136,7 +136,7 @@ namespace Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -165,7 +165,7 @@ namespace Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -858,7 +858,7 @@ namespace Infrastructure.Migrations.Postgres
                         .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsDisabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
@@ -887,7 +887,7 @@ namespace Infrastructure.Migrations.Postgres
                         .HasColumnType("character varying(255)");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(100)
