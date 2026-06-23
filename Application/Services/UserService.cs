@@ -6,94 +6,131 @@ using NLog;
 
 using Domain.Dto.User;
 
+using Domain.Entities;
+
 using Infrastructure.Interfaces;
 
 using Tools;
 
 /// <summary>
 /// Service de gestion du profil et de la sécurité utilisateur.
-/// Orchestre les interactions entre le contrôleur et le dépôt utilisateur.
 /// </summary>
 public class UserService : IUserService
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     private readonly IUserRepository _userRepository;
+    private readonly AuthService     _authService;
 
-    /// <summary>
-    /// Initialise une nouvelle instance de <see cref="UserService"/>.
-    /// </summary>
-    /// <param name="userRepository">Le dépôt utilisateur.</param>
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, AuthService authService)
     {
         _userRepository = userRepository;
+        _authService    = authService;
     }
 
-    /// <inheritdoc />
+    // ── Profile ───────────────────────────────────────────────────────────────
+
     public async Task<UserProfileDto> GetProfileAsync(int userId)
     {
-        _logger.Info("Récupération du profil pour l'utilisateur ID {UserId}", userId);
-
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {userId}).");
 
-        return new UserProfileDto
-        {
-            Id              = user.Id,
-            Email           = user.Email,
-            FirstName       = user.FirstName,
-            LastName        = user.LastName,
-            Role            = user.Role.ToString(),
-            IsEmailVerified = user.IsEmailVerified,
-            CreatedAt       = user.CreatedAt,
-        };
+        return ToProfileDto(user);
     }
 
-    /// <inheritdoc />
     public async Task<UserProfileDto> UpdateProfileAsync(int userId, UpdateProfileDto dto)
     {
-        _logger.Info("Mise à jour du profil pour l'utilisateur ID {UserId}", userId);
-
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {userId}).");
+
+        var emailChanged = !string.Equals(user.Email, dto.Email, StringComparison.OrdinalIgnoreCase);
 
         user.FirstName = dto.FirstName;
         user.LastName  = dto.LastName;
         user.Email     = dto.Email;
 
+        if (emailChanged)
+        {
+            user.IsEmailVerified = false;
+            _logger.Info("Email changé pour l'utilisateur ID {UserId} — vérification requise.", userId);
+        }
+
         await _userRepository.UpdateAsync(user);
 
-        _logger.Info("Profil mis à jour avec succès pour l'utilisateur ID {UserId}", userId);
-
-        return new UserProfileDto
+        if (emailChanged)
         {
-            Id              = user.Id,
-            Email           = user.Email,
-            FirstName       = user.FirstName,
-            LastName        = user.LastName,
-            Role            = user.Role.ToString(),
-            IsEmailVerified = user.IsEmailVerified,
-            CreatedAt       = user.CreatedAt,
-        };
+            await _authService.SendEmailVerificationOtpInternalAsync(user);
+        }
+
+        _logger.Info("Profil mis à jour pour l'utilisateur ID {UserId}", userId);
+        return ToProfileDto(user);
     }
 
-    /// <inheritdoc />
     public async Task UpdatePasswordAsync(int userId, UpdatePasswordDto dto)
     {
-        _logger.Info("Demande de changement de mot de passe pour l'utilisateur ID {UserId}", userId);
-
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {userId}).");
 
         if (!dto.CurrentPassword.VerifyHashProvided(user.PasswordHash))
-        {
-            _logger.Warn("Mot de passe actuel incorrect pour l'utilisateur ID {UserId}", userId);
             throw new UnauthorizedAccessException("Le mot de passe actuel est incorrect.");
-        }
 
-        var newHash = dto.NewPassword.GetHash();
-        await _userRepository.UpdatePasswordAsync(userId, newHash);
+        await _userRepository.UpdatePasswordAsync(userId, dto.NewPassword.GetHash());
 
-        _logger.Info("Mot de passe mis à jour avec succès pour l'utilisateur ID {UserId}", userId);
+        _logger.Info("Mot de passe mis à jour pour l'utilisateur ID {UserId}", userId);
     }
+
+    // ── Admin ─────────────────────────────────────────────────────────────────
+
+    public async Task<IEnumerable<AdminUserDto>> GetAllUsersExceptAsync(int currentAdminId)
+    {
+        var users = await _userRepository.GetAllExceptAsync(currentAdminId);
+        return users.Select(ToAdminDto);
+    }
+
+    public async Task SetUserDisabledAsync(int targetUserId, bool isDisabled)
+    {
+        var exists = await _userRepository.GetByIdAsync(targetUserId)
+            ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {targetUserId}).");
+
+        await _userRepository.SetDisabledAsync(targetUserId, isDisabled);
+        _logger.Info("Utilisateur ID {UserId} — IsDisabled={IsDisabled}", targetUserId, isDisabled);
+    }
+
+    public async Task SetUserRoleAsync(int targetUserId, UserRole role)
+    {
+        var exists = await _userRepository.GetByIdAsync(targetUserId)
+            ?? throw new KeyNotFoundException($"Utilisateur introuvable (ID : {targetUserId}).");
+
+        await _userRepository.SetRoleAsync(targetUserId, role);
+        _logger.Info("Utilisateur ID {UserId} — Role={Role}", targetUserId, role);
+    }
+
+    // ── Mapping helpers ───────────────────────────────────────────────────────
+
+    private static UserProfileDto ToProfileDto(Domain.Entities.User u) => new()
+    {
+        Id               = u.Id,
+        Email            = u.Email,
+        FirstName        = u.FirstName,
+        LastName         = u.LastName,
+        Role             = u.Role.ToString(),
+        IsEmailVerified  = u.IsEmailVerified,
+        IsDisabled       = u.IsDisabled,
+        TwoFactorEnabled = u.TwoFactorEnabled,
+        CreatedAt        = u.CreatedAt,
+    };
+
+    private static AdminUserDto ToAdminDto(Domain.Entities.User u) => new()
+    {
+        Id              = u.Id,
+        Email           = u.Email,
+        FirstName       = u.FirstName,
+        LastName        = u.LastName,
+        Role            = u.Role.GetEnumDescription(),
+        IsEmailVerified = u.IsEmailVerified,
+        IsDisabled      = u.IsDisabled,
+        // HasTwoFactor reflects CONFIRMED 2FA only, not a pending/unconfirmed secret.
+        HasTwoFactor    = u.TwoFactorEnabled,
+        CreatedAt       = u.CreatedAt,
+    };
 }

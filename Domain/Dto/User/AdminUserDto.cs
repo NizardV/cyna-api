@@ -1,9 +1,9 @@
 namespace Domain.Dto.User;
 
 /// <summary>
-/// Profil public de l'utilisateur connecté.
+/// Représentation d'un utilisateur dans la liste d'administration.
 /// </summary>
-public class UserProfileDto
+public class AdminUserDto
 {
     public int Id { get; set; }
     public string Email { get; set; } = string.Empty;
@@ -12,9 +12,6 @@ public class UserProfileDto
     public string Role { get; set; } = string.Empty;
     public bool IsEmailVerified { get; set; }
     public bool IsDisabled { get; set; }
-
-    /// <summary>True si le 2FA a été configuré ET confirmé pour ce compte.</summary>
-    public bool TwoFactorEnabled { get; set; }
-
+    public bool HasTwoFactor { get; set; }
     public DateTime CreatedAt { get; set; }
 }
