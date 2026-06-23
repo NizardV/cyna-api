@@ -9,8 +9,8 @@ using System.ComponentModel;
 public class PaymentTestRequestDto
 {
     /// <summary>Le montant en centimes (100 = 1,00 €).</summary>
-    [DefaultValue(100)]
-    public long AmountCents { get; set; } = 100;
+    [DefaultValue(100L)]
+    public long AmountCents { get; set; } = 100L;
 
     /// <summary>
     /// Le PaymentMethod de test Stripe. Exemples :
