@@ -38,6 +38,7 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
+                echo "DEBUG DB_PWD='$DB_PWD'"
                 printf "DB_PASSWORD=%s\nJWT_SECRET_KEY=%s\nSTRIPE_SECRET_KEY=%s\nSTRIPE_WEBHOOK_SECRET=%s\nAPI_PORT=4001\nASPNETCORE_ENVIRONMENT=Staging\n" \
                   "$DB_PWD" "$JWT_KEY" "$STRIPE_SK" "$STRIPE_WH" \
                   > ~/cyna-infra/docker-compose/.env.staging
