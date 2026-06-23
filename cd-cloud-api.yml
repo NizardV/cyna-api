@@ -38,14 +38,9 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                cat > ~/cyna-infra/docker-compose/.env.staging << EOF
-                DB_PASSWORD=$DB_PWD
-                JWT_SECRET_KEY=$JWT_KEY
-                STRIPE_SECRET_KEY=$STRIPE_SK
-                STRIPE_WEBHOOK_SECRET=$STRIPE_WH
-                API_PORT=4001
-                ASPNETCORE_ENVIRONMENT=Staging
-                EOF
+                printf "DB_PASSWORD=%s\nJWT_SECRET_KEY=%s\nSTRIPE_SECRET_KEY=%s\nSTRIPE_WEBHOOK_SECRET=%s\nAPI_PORT=4001\nASPNETCORE_ENVIRONMENT=Staging\n" \
+                  "$DB_PWD" "$JWT_KEY" "$STRIPE_SK" "$STRIPE_WH" \
+                  > ~/cyna-infra/docker-compose/.env.staging
                 echo ".env.staging écrit ✅"
             env:
               DB_PWD:    $(DB_PASSWORD_STAGING)
@@ -158,14 +153,9 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                cat > ~/cyna-infra/docker-compose/.env.prod << EOF
-                DB_PASSWORD=$DB_PWD
-                JWT_SECRET_KEY=$JWT_KEY
-                STRIPE_SECRET_KEY=$STRIPE_SK
-                STRIPE_WEBHOOK_SECRET=$STRIPE_WH
-                API_PORT=4000
-                ASPNETCORE_ENVIRONMENT=Production
-                EOF
+                printf "DB_PASSWORD=%s\nJWT_SECRET_KEY=%s\nSTRIPE_SECRET_KEY=%s\nSTRIPE_WEBHOOK_SECRET=%s\nAPI_PORT=4000\nASPNETCORE_ENVIRONMENT=Production\n" \
+                  "$DB_PWD" "$JWT_KEY" "$STRIPE_SK" "$STRIPE_WH" \
+                  > ~/cyna-infra/docker-compose/.env.prod
                 echo ".env.prod écrit ✅"
             env:
               DB_PWD:    $(DB_PASSWORD_PROD)
