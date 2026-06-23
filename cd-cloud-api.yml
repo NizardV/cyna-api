@@ -34,32 +34,16 @@ stages:
                 echo "##vso[task.setvariable variable=API_PORT]4000"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
                 echo "##vso[task.setvariable variable=IS_PROD]true"
-                echo "##vso[task.setvariable variable=DB_PASSWORD]$DB_PASSWORD_PROD_ENV"
-                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$JWT_SECRET_KEY_PROD_ENV"
-                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$STRIPE_SECRET_KEY_PROD_ENV"
-                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$STRIPE_WEBHOOK_SECRET_PROD_ENV"
               else
                 echo "##vso[task.setvariable variable=envName]staging"
                 echo "##vso[task.setvariable variable=composeProject]cyna-staging"
                 echo "##vso[task.setvariable variable=API_PORT]4001"
                 echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
                 echo "##vso[task.setvariable variable=IS_PROD]false"
-                echo "##vso[task.setvariable variable=DB_PASSWORD]$DB_PASSWORD_STAGING_ENV"
-                echo "##vso[task.setvariable variable=JWT_SECRET_KEY]$JWT_SECRET_KEY_STAGING_ENV"
-                echo "##vso[task.setvariable variable=STRIPE_SECRET_KEY]$STRIPE_SECRET_KEY_STAGING_ENV"
-                echo "##vso[task.setvariable variable=STRIPE_WEBHOOK_SECRET]$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
               fi
             displayName: "Calcul dynamique de l'environnement cible"
             env:
               BUILD_SOURCEBRANCH: $(Build.SourceBranch)
-              DB_PASSWORD_PROD_ENV:             $(DB_PASSWORD_PROD)
-              DB_PASSWORD_STAGING_ENV:          $(DB_PASSWORD_STAGING)
-              JWT_SECRET_KEY_PROD_ENV:          $(JWT_SECRET_KEY_PROD)
-              JWT_SECRET_KEY_STAGING_ENV:       $(JWT_SECRET_KEY_STAGING)
-              STRIPE_SECRET_KEY_PROD_ENV:       $(STRIPE_SECRET_KEY_PROD)
-              STRIPE_SECRET_KEY_STAGING_ENV:    $(STRIPE_SECRET_KEY_STAGING)
-              STRIPE_WEBHOOK_SECRET_PROD_ENV:   $(STRIPE_WEBHOOK_SECRET_PROD)
-              STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
           # ── STEP 2 : Versioning (prod uniquement) ──
           - bash: |
@@ -126,56 +110,42 @@ stages:
               echo "Image taguée $(NEW_VERSION) ✅"
             displayName: 'Tag image Docker avec version'
 
-          # ── STEP 4 : Déploiement SSH ──
-          # Les secrets sont injectés via env: et passés en préfixe de la commande docker compose
-          # (les variables ADO ne s'interpolent pas dans le bloc inline SSH)
-          - task: SSH@0
-            displayName: 'Deploy API sur OVH via Docker Compose'
-            inputs:
-              sshEndpoint: 'OVH-SSH-Connection'
-              runOptions: 'inline'
-              failOnStdErr: false
-              inline: |
-                echo "DEBUG envName='$(envName)'"
-                echo "DEBUG DB_STAGING vide?='$DB_PASSWORD_STAGING_ENV'"
-                echo "DEBUG DB_PROD vide?='$DB_PASSWORD_PROD_ENV'"
+          # ── STEP 4 : Écriture du .env sur le VPS (bash local — résout bien les variable groups) ──
+          - bash: |
+              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
+              if [ "$BRANCH_NAME" = "main" ]; then
+                ENV_NAME="prod"
+                DB_PWD="$DB_PASSWORD_PROD_ENV"
+                JWT_KEY="$JWT_SECRET_KEY_PROD_ENV"
+                STRIPE_SK="$STRIPE_SECRET_KEY_PROD_ENV"
+                STRIPE_WH="$STRIPE_WEBHOOK_SECRET_PROD_ENV"
+                API_PORT="4000"
+                ASPNETCORE_ENV="Production"
+              else
+                ENV_NAME="staging"
+                DB_PWD="$DB_PASSWORD_STAGING_ENV"
+                JWT_KEY="$JWT_SECRET_KEY_STAGING_ENV"
+                STRIPE_SK="$STRIPE_SECRET_KEY_STAGING_ENV"
+                STRIPE_WH="$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
+                API_PORT="4001"
+                ASPNETCORE_ENV="Staging"
+              fi
 
-                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
-                cd ~/cyna-infra
-                git pull origin main
-                cd docker-compose/
+              echo "Écriture du .env.${ENV_NAME} sur le VPS..."
 
-                if [ "$(envName)" = "prod" ]; then
-                  DB_PWD="$DB_PASSWORD_PROD_ENV"
-                  JWT_KEY="$JWT_SECRET_KEY_PROD_ENV"
-                  STRIPE_SK="$STRIPE_SECRET_KEY_PROD_ENV"
-                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_PROD_ENV"
-                else
-                  DB_PWD="$DB_PASSWORD_STAGING_ENV"
-                  JWT_KEY="$JWT_SECRET_KEY_STAGING_ENV"
-                  STRIPE_SK="$STRIPE_SECRET_KEY_STAGING_ENV"
-                  STRIPE_WH="$STRIPE_WEBHOOK_SECRET_STAGING_ENV"
-                fi
+              ssh -o StrictHostKeyChecking=no debian@213.32.21.169 "cat > ~/cyna-infra/docker-compose/.env.${ENV_NAME} << EOF
+              DB_PASSWORD=${DB_PWD}
+              JWT_SECRET_KEY=${JWT_KEY}
+              STRIPE_SECRET_KEY=${STRIPE_SK}
+              STRIPE_WEBHOOK_SECRET=${STRIPE_WH}
+              API_PORT=${API_PORT}
+              ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENV}
+              EOF"
 
-                echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
-
-                API_PORT=$(API_PORT) \
-                ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                DB_PASSWORD="$DB_PWD" \
-                JWT_SECRET_KEY="$JWT_KEY" \
-                STRIPE_SECRET_KEY="$STRIPE_SK" \
-                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
-                  docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml pull api
-
-                API_PORT=$(API_PORT) \
-                ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                DB_PASSWORD="$DB_PWD" \
-                JWT_SECRET_KEY="$JWT_KEY" \
-                STRIPE_SECRET_KEY="$STRIPE_SK" \
-                STRIPE_WEBHOOK_SECRET="$STRIPE_WH" \
-                  docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+              echo ".env.${ENV_NAME} écrit ✅"
+            displayName: 'Écriture du .env sur le VPS'
             env:
-              GHCR_PAT_ENV:                      $(GHCR_PAT)
+              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
               DB_PASSWORD_PROD_ENV:              $(DB_PASSWORD_PROD)
               DB_PASSWORD_STAGING_ENV:           $(DB_PASSWORD_STAGING)
               JWT_SECRET_KEY_PROD_ENV:           $(JWT_SECRET_KEY_PROD)
@@ -185,7 +155,26 @@ stages:
               STRIPE_WEBHOOK_SECRET_PROD_ENV:    $(STRIPE_WEBHOOK_SECRET_PROD)
               STRIPE_WEBHOOK_SECRET_STAGING_ENV: $(STRIPE_WEBHOOK_SECRET_STAGING)
 
-          # ── STEP 5 : Health check ──
+          # ── STEP 5 : Déploiement SSH ──
+          - task: SSH@0
+            displayName: 'Deploy API sur OVH via Docker Compose'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
+                cd ~/cyna-infra
+                git pull origin main
+                cd docker-compose/
+
+                echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
+                docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml --env-file .env.$(envName) pull api
+                docker compose -p cyna-$(envName) -f docker-compose.$(envName).yml --env-file .env.$(envName) up -d --no-build --force-recreate api
+            env:
+              GHCR_PAT_ENV: $(GHCR_PAT)
+
+          # ── STEP 6 : Health check ──
           - task: SSH@0
             displayName: 'Health check post-deploy'
             inputs:
@@ -193,5 +182,5 @@ stages:
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                sleep 5
+                sleep 10
                 curl -f http://localhost:$(API_PORT)/health || exit 1
