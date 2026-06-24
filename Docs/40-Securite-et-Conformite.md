@@ -167,20 +167,10 @@ sévérité, un impact et une action corrective.
 
 | ID | Sévérité | Vulnérabilité | Impact | Remédiation | Réf. |
 |---|---|---|---|---|---|
-| SEC-01 | 🔴 Critique | `[Authorize]` **commenté** sur `DashboardController` | Statistiques entreprise (CA, users) accessibles **sans auth** | Réactiver `[Authorize(Roles=…)]` avec les bons libellés + test de non-régression | [`07-Dashboard-Statistiques.md`](07-Dashboard-Statistiques.md) |
-| SEC-02 | 🔴 Critique | Chemin `/orders` (legacy) marque `Order=Paid` **sans vérifier le paiement** | Risque de fraude (commande non payée comptée comme payée) | Faire transiter tout paiement par le flux Stripe webhook ; déprécier le chemin mock | [`05-Panier-Commandes.md`](05-Panier-Commandes.md) |
-| SEC-03 | 🟠 Élevé | Cookies `Secure=false` | Token transmissible en clair si HTTP | Passer `Secure=true` derrière HTTPS en prod (déjà HTTPS forcé) | [`01-Authentification-JWT-2FA.md`](01-Authentification-JWT-2FA.md) |
-| SEC-04 | 🟠 Élevé | `[Authorize(Roles="Admin")]` (nom C#) ≠ claim `role` (libellé `[Description]`) | Routes mal protégées ou admins légitimes bloqués | Uniformiser sur la policy `AdminOnly` + test d'intégration | [`06-Categories.md`](06-Categories.md) |
-| SEC-05 | 🟠 Élevé | Endpoint de debug `GET /debug-claims` `[AllowAnonymous]` | Fuite des claims du contexte | Exclure de la build prod (garde `IsDevelopment()`) ou supprimer | [`01-Authentification-JWT-2FA.md`](01-Authentification-JWT-2FA.md) |
-| SEC-06 | 🟡 Moyen | Pas de **rate limiting** sur `/auth/*` (login, forgot-password, register) | Brute-force / spam d'emails | Middleware de rate limiting ASP.NET Core ou règle reverse proxy | [`02-Email-OTP.md`](02-Email-OTP.md) |
-| SEC-07 | 🟡 Moyen | `?mock=true` du dashboard accessible **en prod** | Données factices servies en prod | Garde d'environnement (`IsDevelopment()`) | [`07-Dashboard-Statistiques.md`](07-Dashboard-Statistiques.md) |
 | SEC-08 | 🟡 Moyen | Pas de purge des OTP expirés/utilisés | Croissance illimitée des tables de codes | Job de nettoyage planifié | [`02-Email-OTP.md`](02-Email-OTP.md) |
 | SEC-09 | 🟢 Mineur | Politique de mot de passe incohérente (6 vs 8) | Mots de passe faibles à l'inscription | Politique unique (longueur + complexité) | [`02-Email-OTP.md`](02-Email-OTP.md) |
 | SEC-10 | 🟢 Mineur | Révocation de token non instantanée (désactivation bloque le refresh, pas l'access en cours 15 min) | Fenêtre résiduelle de 15 min | Réduire la durée de l'access token ou blocklist | [`03-Gestion-Utilisateurs.md`](03-Gestion-Utilisateurs.md) |
 
-> Ces correctifs sont priorisés dans la roadmap : [`70-Gouvernance-et-Roadmap.md`](70-Gouvernance-et-Roadmap.md).
-> Les vérifications correspondantes figurent dans le plan de tests de sécurité :
-> [`30-Strategie-et-Resultats-de-Tests.md`](30-Strategie-et-Resultats-de-Tests.md) §6.
 
 ---
 
