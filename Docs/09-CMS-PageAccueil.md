@@ -76,7 +76,6 @@ Sans cela, Swagger/Scalar lèverait une exception au démarrage (deux schémas d
 ## ⚠️ 4. Points d'attention
 
 * Les quatre appels au CMS pourraient être parallélisés (`Task.WhenAll`) pour réduire la latence de `/Home`, qui est probablement la route la plus fréquemment appelée (page d'accueil = première requête de chaque session).
-* `GetHomeTopProductsAsync` ne filtre que sur les plans **mensuels** pour le calcul du prix — un produit dont le seul plan serait annuel ou à vie afficherait un prix d'appel à `0`/`null` même s'il a un tarif réel. Comportement à vérifier côté métier.
 
 ---
 
