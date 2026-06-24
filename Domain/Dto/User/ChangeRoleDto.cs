@@ -11,5 +11,5 @@ public class ChangeRoleDto
 {
     /// <summary>Nouveau rôle à assigner.</summary>
     [Required]
-    public UserRole Role { get; set; }
+    public string Role { get; set; }
 }

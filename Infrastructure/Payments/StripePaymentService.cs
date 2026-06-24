@@ -42,7 +42,20 @@ public class StripePaymentService : IPaymentService
     public async Task<string> EnsureCustomerAsync(User user)
     {
         if (!string.IsNullOrEmpty(user.StripeCustomerId))
-            return user.StripeCustomerId;
+        {
+            try
+            {
+                await _customers.GetAsync(user.StripeCustomerId);
+                return user.StripeCustomerId;
+            }
+            catch (StripeException ex) when (ex.StripeError?.Code == "resource_missing")
+            {
+                // ID mock ou customer supprimé du Dashboard — on en crée un nouveau.
+                _logger.Warn("Customer Stripe {CustomerId} introuvable — recréation (userId={UserId})",
+                    user.StripeCustomerId, user.Id);
+                user.StripeCustomerId = null;
+            }
+        }
 
         var customer = await _customers.CreateAsync(new CustomerCreateOptions
         {
