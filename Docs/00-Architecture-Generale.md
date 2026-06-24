@@ -88,7 +88,7 @@ Toute l'enregistrement des services se fait dans `Api/Extensions/AppServicesExte
 | `IUserService` | `UserService` | voir `03-Gestion-Utilisateurs.md` |
 | `ICartService` | `CartService` | |
 | `ICategoryService` | `CategoryService` | voir `06-Categories.md` |
-| `ICmsService` | `CmsService` | voir `08-CMS-PageAccueil.md` |
+| `ICmsService` | `CmsService` | voir `09-CMS-PageAccueil.md` |
 | `IProductService` | `ProductService` | voir `Docs/ProductAdmin-CRUD.md` |
 | `ISearchService` | `SearchService` | |
 | `IDashboardService` | `DashboardService` | voir `07-Dashboard-Statistiques.md` |
@@ -148,7 +148,7 @@ Au démarrage, `context.Database.MigrateAsync()` est exécuté systématiquement
 
 ## 🗄️ 5. Base de données (`DatabaseExtensions`)
 
-Voir le détail complet dans `09-Base-de-donnees.md`. Résumé :
+Voir le détail complet dans `08-Base-de-donnees.md`. Résumé :
 
 * Provider piloté par la clé de config `DatabaseProvider` (`sqlite` par défaut, `postgres` en option).
 * Un intercepteur EF Core (`EfSlowQueryInterceptor`) journalise toute commande SQL dépassant un seuil configurable (`EfPerformanceOptions.SeuilMs`, 200 ms par défaut).
@@ -169,5 +169,5 @@ Voir le détail complet dans `09-Base-de-donnees.md`. Résumé :
 
 * `01-Authentification-JWT-2FA.md`
 * `02-Email-OTP.md`
-* `09-Base-de-donnees.md`
-* `Docs/INSTALLATION.md` *(à la racine du repo)* — procédure d'installation locale
+* `08-Base-de-donnees.md`
+* `INSTALLATION.md` *(à la racine du repo)* — procédure d'installation locale

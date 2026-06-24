@@ -352,11 +352,21 @@ ou
 
 ---
 
-## 🧪 Tests Intégration
+## 🧪 Tests
 
-**File** : `Api.IntegrationTests/Products/ProductCrudTests.cs`
+> ⚠️ **État réel au moment de la rédaction (branche `dev`)** : le projet `Api.IntegrationTests`
+> ne contient pour l'instant que **l'infrastructure de test** (`CustomWebApplicationFactory`,
+> `TestAuthHandler`) — **aucune classe de test produit n'y est encore présente**. Les tests
+> unitaires réellement écrits (services + contrôleurs) se trouvent sur la branche
+> `test/setup-unit-tests` et ne sont pas encore mergés sur `dev`.
+>
+> Le détail complet de la stratégie de test, l'inventaire des tests existants et le plan des
+> tests à écrire (dont les tests d'intégration produit ci-dessous) sont centralisés dans
+> [`30-Strategie-et-Resultats-de-Tests.md`](30-Strategie-et-Resultats-de-Tests.md).
 
-**19 tests** couvrant :
+### Tests d'intégration produit — **plan cible** (à implémenter dans `Api.IntegrationTests/Products/ProductCrudTests.cs`)
+
+Cas de test prévus pour valider de bout en bout le CRUD produit (état : **planifié**, non encore écrit) :
 
 | Test | Cas |
 |------|-----|
@@ -377,7 +387,6 @@ ou
 | `GetProductDetails_Public_RenvoieLesSpecsEnTableau` | Specs : array JSON |
 | `GetSimilarProducts_Returns200` | Similaires OK |
 | `GetCategories_Returns200` | Categories OK |
-| + tests slugs uniques, images, etc. |
 
 ---
 
