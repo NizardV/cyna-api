@@ -10,5 +10,6 @@ public class ProductSummaryDto
     public string? Name { get; set; }
     public string? ShortDescription { get; set; }
     public string? ImageUrl { get; set; }
-    public decimal? StartingPrice { get; set; } 
+    public decimal? StartingPrice { get; set; }
+    public string? Status { get; set; }
 }
