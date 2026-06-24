@@ -144,7 +144,8 @@ public class CmsService : ICmsService
                 Name = translation?.Name,
                 ShortDescription = shortDesc,
                 ImageUrl = image?.ImageUrl,
-                StartingPrice = minPrice == 0 ? null : minPrice
+                StartingPrice = minPrice == 0 ? null : minPrice,
+                Status = p.Status?.ToString().ToLowerInvariant()
             };
         });
     }
