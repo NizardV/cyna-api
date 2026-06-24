@@ -9,14 +9,6 @@ faire l'**inventaire honnête des tests réellement écrits** et de leurs résul
 Ce document tient lieu de **volet « tests » du DAT/DCT** : il relie chaque test à l'exigence
 qu'il valide et documente la méthodologie d'exécution.
 
-> ### ⚠️ Avertissement de transparence (état au moment de la rédaction)
-> - Sur la branche **`dev`**, le projet `UnitTests` ne contient **pas encore** de classes de test
->   (uniquement les fichiers générés) ; `Api.IntegrationTests` ne contient que l'**infrastructure**
->   de test (`CustomWebApplicationFactory`, `TestAuthHandler`).
-> - Les **19 tests unitaires** décrits au §4 existent réellement sur la branche
->   **`test/setup-unit-tests`** et seront mergés sur `dev`.
-> - Toute affirmation de couverture ci-dessous distingue explicitement ce qui est **écrit** de ce
->   qui est **planifié**. Aucune section ne prétend que des tests inexistants passent.
 
 ---
 
