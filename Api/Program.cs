@@ -78,6 +78,9 @@ try
 
         if (args.Contains("--seed") && !app.Environment.IsProduction())
             await DbInitializer.SeedAsync(context);
+
+        if (args.Contains("--seed") && app.Environment.IsProduction())
+            await DbInitializerProd.SeedAsync(context);
     }
 
     // Docs (hors prod)
