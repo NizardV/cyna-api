@@ -91,7 +91,6 @@ public class CategoryRepository : ICategoryRepository
     public async Task<Category?> GetByIdAsync(int id)
     {
         return await _context.Categories
-            .AsNoTracking()
             .Include(c => c.Translations)
             .Include(c => c.Products)
             .FirstOrDefaultAsync(c => c.Id == id);
