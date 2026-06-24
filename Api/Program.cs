@@ -2,6 +2,7 @@ using Api.Extensions;
 
 using Infrastructure.Data;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
@@ -77,6 +78,9 @@ try
 
         if (args.Contains("--seed") && !app.Environment.IsProduction())
             await DbInitializer.SeedAsync(context);
+
+        if (args.Contains("--seed") && app.Environment.IsProduction())
+            await DbInitializerProd.SeedAsync(context);
     }
 
     // Docs (hors prod)
@@ -107,6 +111,10 @@ try
     app.MapHealthChecks("/health");
 
     // Pipeline middleware (ordre important)
+    app.UseForwardedHeaders(new ForwardedHeadersOptions   // 0. Proxy (X-Forwarded-Proto → scheme HTTPS)
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    });
     app.UseHttpsRedirection();   // 1. HTTPS
     app.UseCors("Frontend");     // 2. CORS
     app.UseCookiePolicy();       // 3. Cookies

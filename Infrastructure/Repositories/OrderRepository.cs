@@ -89,4 +89,44 @@ public class OrderRepository : IOrderRepository
         _logger.Info("Commande ID {OrderId} créée avec succès", order.Id);
         return order;
     }
+
+    /// <inheritdoc />
+    public async Task<Order> CreatePendingOrderAsync(Address billingAddress, Order order)
+    {
+        _context.Addresses.Add(billingAddress);
+        await _context.SaveChangesAsync();
+
+        order.BillingAddressId = billingAddress.Id;
+        _context.Orders.Add(order);
+        await _context.SaveChangesAsync();
+
+        _logger.Info("Commande Pending ID {OrderId} créée", order.Id);
+        return order;
+    }
+
+    /// <inheritdoc />
+    public async Task<Order?> GetTrackedByIdAsync(int orderId)
+        => await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+
+    /// <inheritdoc />
+    public async Task<Order?> GetByStripePaymentIntentIdAsync(string paymentIntentId)
+        => await _context.Orders.FirstOrDefaultAsync(o => o.StripePaymentIntentId == paymentIntentId);
+
+    /// <inheritdoc />
+    public async Task UpdateOrderAsync(Order order)
+    {
+        _context.Orders.Update(order);
+        await _context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> InvoiceExistsForOrderAsync(int orderId)
+        => await _context.Invoices.AnyAsync(i => i.OrderId == orderId);
+
+    /// <inheritdoc />
+    public async Task AddInvoiceAsync(Invoice invoice)
+    {
+        _context.Invoices.Add(invoice);
+        await _context.SaveChangesAsync();
+    }
 }
