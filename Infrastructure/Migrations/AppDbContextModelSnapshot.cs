@@ -79,7 +79,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Addresses", (string)null);
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("Domain.Entities.AddressAndPayment.PaymentMethod", b =>
@@ -116,7 +116,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PaymentMethods", (string)null);
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("Domain.Entities.AuthCodes.EmailVerificationCode", b =>
@@ -135,6 +135,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -142,7 +145,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmailVerificationCodes", (string)null);
+                    b.ToTable("EmailVerificationCodes");
                 });
 
             modelBuilder.Entity("Domain.Entities.AuthCodes.PasswordResetCode", b =>
@@ -161,6 +164,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -168,7 +174,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PasswordResetCodes", (string)null);
+                    b.ToTable("PasswordResetCodes");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.Category", b =>
@@ -195,7 +201,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.CategoryTranslation", b =>
@@ -225,7 +231,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("CategoryId", "Locale")
                         .IsUnique();
 
-                    b.ToTable("CategoryTranslations", (string)null);
+                    b.ToTable("CategoryTranslations");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.PricingPlan", b =>
@@ -260,7 +266,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("PricingPlans", (string)null);
+                    b.ToTable("PricingPlans");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.PricingTier", b =>
@@ -290,7 +296,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("PricingPlanId");
 
-                    b.ToTable("PricingTiers", (string)null);
+                    b.ToTable("PricingTiers");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.Product", b =>
@@ -334,7 +340,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.ProductImage", b =>
@@ -360,7 +366,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages", (string)null);
+                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Domain.Entities.Catalogue.ProductTranslation", b =>
@@ -391,7 +397,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("ProductId", "Locale")
                         .IsUnique();
 
-                    b.ToTable("ProductTranslations", (string)null);
+                    b.ToTable("ProductTranslations");
                 });
 
             modelBuilder.Entity("Domain.Entities.Company", b =>
@@ -409,7 +415,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.CartItem", b =>
@@ -443,7 +449,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Invoice", b =>
@@ -477,7 +483,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Order", b =>
@@ -517,7 +523,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.OrderItem", b =>
@@ -567,7 +573,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("Domain.Entities.OrdersAndSubscriptions.Subscription", b =>
@@ -614,7 +620,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Subscriptions", (string)null);
+                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlide", b =>
@@ -638,7 +644,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.ToTable("CarouselSlides", (string)null);
+                    b.ToTable("CarouselSlides");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.CarouselSlideTranslation", b =>
@@ -669,7 +675,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("SlideId", "Locale")
                         .IsUnique();
 
-                    b.ToTable("CarouselSlideTranslations", (string)null);
+                    b.ToTable("CarouselSlideTranslations");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotConversation", b =>
@@ -693,7 +699,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChatbotConversations", (string)null);
+                    b.ToTable("ChatbotConversations");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.ChatbotMessage", b =>
@@ -721,7 +727,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("ConversationId");
 
-                    b.ToTable("ChatbotMessages", (string)null);
+                    b.ToTable("ChatbotMessages");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.OrderPromoCode", b =>
@@ -747,7 +753,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("PromoCodeId");
 
-                    b.ToTable("OrderPromoCodes", (string)null);
+                    b.ToTable("OrderPromoCodes");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.PromoCode", b =>
@@ -777,7 +783,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("PromoCodes", (string)null);
+                    b.ToTable("PromoCodes");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSetting", b =>
@@ -798,7 +804,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("SettingKey")
                         .IsUnique();
 
-                    b.ToTable("SiteSettings", (string)null);
+                    b.ToTable("SiteSettings");
                 });
 
             modelBuilder.Entity("Domain.Entities.PromoAndCms.SiteSettingTranslation", b =>
@@ -824,7 +830,7 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("SettingId", "Locale")
                         .IsUnique();
 
-                    b.ToTable("SiteSettingTranslations", (string)null);
+                    b.ToTable("SiteSettingTranslations");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -851,6 +857,9 @@ namespace Infrastructure.Migrations.Postgres
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
 
@@ -873,6 +882,13 @@ namespace Infrastructure.Migrations.Postgres
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("TwoFactorSecret")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -884,7 +900,9 @@ namespace Infrastructure.Migrations.Postgres
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.HasIndex("StripeCustomerId");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Infrastructure.Entities.PromoAndCms.ContactMessage", b =>
@@ -922,7 +940,7 @@ namespace Infrastructure.Migrations.Postgres
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ContactMessages", (string)null);
+                    b.ToTable("ContactMessages");
                 });
 
             modelBuilder.Entity("Domain.Entities.AddressAndPayment.Address", b =>

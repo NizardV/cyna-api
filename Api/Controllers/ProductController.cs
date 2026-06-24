@@ -37,7 +37,7 @@ public class ProductController : ControllerBase
     /// <response code="200">Liste retournée avec succès.</response>
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="403">Utilisateur non administrateur.</response>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ProductAdminListItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -107,7 +107,7 @@ public class ProductController : ControllerBase
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="403">Utilisateur non administrateur.</response>
     /// <response code="404">Produit introuvable.</response>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("{id:int}/admin")]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -136,7 +136,7 @@ public class ProductController : ControllerBase
     /// <response code="400">Données invalides (statut, catégorie, plans ou paliers).</response>
     /// <response code="401">Utilisateur non authentifié.</response>
     /// <response code="403">Utilisateur non administrateur.</response>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -171,7 +171,7 @@ public class ProductController : ControllerBase
     /// <response code="403">Utilisateur non administrateur.</response>
     /// <response code="404">Produit introuvable.</response>
     /// <response code="409">Un plan retiré est référencé par des commandes ou abonnements.</response>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(typeof(ProductAdminDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -218,7 +218,7 @@ public class ProductController : ControllerBase
     /// <response code="403">Utilisateur non administrateur.</response>
     /// <response code="404">Produit introuvable.</response>
     /// <response code="409">Le produit est référencé par des commandes ou abonnements.</response>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminPolicy")]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

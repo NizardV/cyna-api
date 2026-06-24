@@ -5,24 +5,16 @@ namespace Domain.Dto.User;
 /// </summary>
 public class UserProfileDto
 {
-    /// <summary>Identifiant de l'utilisateur.</summary>
     public int Id { get; set; }
-
-    /// <summary>Adresse e-mail.</summary>
     public string Email { get; set; } = string.Empty;
-
-    /// <summary>Prénom.</summary>
     public string FirstName { get; set; } = string.Empty;
-
-    /// <summary>Nom de famille.</summary>
     public string LastName { get; set; } = string.Empty;
-
-    /// <summary>Rôle de l'utilisateur (User, Admin, SuperAdmin).</summary>
     public string Role { get; set; } = string.Empty;
-
-    /// <summary>Indique si l'adresse e-mail a été vérifiée.</summary>
     public bool IsEmailVerified { get; set; }
+    public bool IsDisabled { get; set; }
 
-    /// <summary>Date de création du compte.</summary>
+    /// <summary>True si le 2FA a été configuré ET confirmé pour ce compte.</summary>
+    public bool TwoFactorEnabled { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }

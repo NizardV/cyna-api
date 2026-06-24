@@ -20,7 +20,7 @@ using ILogger = NLog.ILogger;
 [ApiController]
 [Route("categories")]
 [Produces("application/json")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class CategoryController : ControllerBase
 {
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();

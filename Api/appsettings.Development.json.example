@@ -9,5 +9,14 @@
       "Microsoft.AspNetCore": "Warning",
       "Microsoft.EntityFrameworkCore.Database.Command": "Information"
     }
+  },
+  "Payments": {
+    "Provider": "Mock",
+    "Currency": "eur"
+  },
+  "Stripe": {
+    "SecretKey": "sk_test_xxx",
+    "PublishableKey": "pk_test_xxx",
+    "WebhookSecret": "whsec_xxx"
   }
 }

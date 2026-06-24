@@ -68,6 +68,7 @@ public class AppDbContext : DbContext
 
         // ── Unique indexes ────────────────────────────────────────────────
         mb.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        mb.Entity<User>().HasIndex(u => u.StripeCustomerId);
         mb.Entity<PaymentMethod>().HasIndex(p => p.StripePaymentMethodId).IsUnique();
         mb.Entity<Category>().HasIndex(c => c.Slug).IsUnique();
         mb.Entity<Product>().HasIndex(p => p.Slug).IsUnique();

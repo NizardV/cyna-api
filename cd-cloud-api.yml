@@ -12,46 +12,61 @@ variables:
   - group: 'GHCR'
   - name: FULL_IMAGE
     value: 'ghcr.io/nizardv/cyna-api'
+
 stages:
 - stage: CD_Cloud
   displayName: 'CD Cloud — Deploy OVH'
   jobs:
-  - deployment: Deploy
+  # ══════════════════════════════════════════
+  # JOB STAGING — déclenché sur dev
+  # ══════════════════════════════════════════
+  - deployment: DeployStaging
+    displayName: 'Deploy Staging'
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/dev')
     environment: 'OVH-Cloud'
     strategy:
       runOnce:
         deploy:
           steps:
-          # ── STEP 1 : Calcul des variables ──
-          - bash: |
-              BRANCH_NAME=$(echo "$BUILD_SOURCEBRANCH" | sed 's|refs/heads/||')
-              echo "Pipeline déclenché par la branche : $BRANCH_NAME"
-              if [ "$BRANCH_NAME" = "main" ]; then
-                echo "##vso[task.setvariable variable=envName]prod"
-                echo "##vso[task.setvariable variable=composeProject]cyna-prod"
-                echo "##vso[task.setvariable variable=targetEnv]PROD"
-                echo "##vso[task.setvariable variable=API_PORT]4000"
-                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Production"
-                echo "##vso[task.setvariable variable=IS_PROD]true"
-              else
-                echo "##vso[task.setvariable variable=envName]staging"
-                echo "##vso[task.setvariable variable=composeProject]cyna-staging"
-                echo "##vso[task.setvariable variable=targetEnv]DEV"
-                echo "##vso[task.setvariable variable=API_PORT]4001"
-                echo "##vso[task.setvariable variable=ASPNETCORE_ENV]Staging"
-                echo "##vso[task.setvariable variable=IS_PROD]false"
-              fi
-            displayName: "Calcul dynamique de l'environnement cible"
+          - task: SSH@0
+            displayName: 'Deploy API staging'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
+                cd ~/cyna-infra && git pull origin main
+                cd docker-compose/
+                echo "─── Pull & Relance API staging sur le port 4001 ───"
+                docker compose -p cyna-staging -f docker-compose.staging.yml --env-file .env.staging pull api
+                docker compose -p cyna-staging -f docker-compose.staging.yml --env-file .env.staging up -d --no-build --force-recreate api
             env:
-              BUILD_SOURCEBRANCH: $(Build.SourceBranch)
+              GHCR_PAT_ENV: $(GHCR_PAT)
 
-          # ── STEP 2 : Versioning (prod uniquement) ──
+          - task: SSH@0
+            displayName: 'Health check staging'
+            inputs:
+              sshEndpoint: 'OVH-SSH-Connection'
+              runOptions: 'inline'
+              failOnStdErr: false
+              inline: |
+                sleep 10
+                curl -f http://localhost:4001/health || exit 1
+
+  # ══════════════════════════════════════════
+  # JOB PROD — déclenché sur main
+  # ══════════════════════════════════════════
+  - deployment: DeployProd
+    displayName: 'Deploy Production'
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    environment: 'OVH-Cloud'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # ── Versioning ──
           - bash: |
-              if [ "$(IS_PROD)" != "true" ]; then
-                echo "Staging — versioning ignoré"
-                exit 0
-              fi
-
               git fetch --tags
               LAST_TAG=$(git tag --sort=-v:refname | grep -E '^api/v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
 
@@ -60,24 +75,18 @@ stages:
                 echo "Aucun tag trouvé, départ depuis $LAST_TAG"
               fi
 
-              echo "Dernier tag : $LAST_TAG"
               VERSION=${LAST_TAG#api/v}
               MAJOR=$(echo $VERSION | cut -d. -f1)
               MINOR=$(echo $VERSION | cut -d. -f2)
               PATCH=$(echo $VERSION | cut -d. -f3)
 
               COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
-              echo "Commits depuis $LAST_TAG :"
-              echo "$COMMITS"
-
               BUMP="patch"
               if echo "$COMMITS" | grep -qE '^feat!:|^fix!:|^refactor!:'; then
                 BUMP="major"
               elif echo "$COMMITS" | grep -qE '^feat:'; then
                 BUMP="minor"
               fi
-
-              echo "Bump détecté : $BUMP"
 
               case $BUMP in
                 major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
@@ -87,7 +96,6 @@ stages:
 
               NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
               NEW_TAG="api/${NEW_VERSION}"
-              echo "Nouvelle version : $NEW_TAG"
               echo "##vso[task.setvariable variable=NEW_VERSION]$NEW_VERSION"
               echo "##vso[task.setvariable variable=NEW_TAG]$NEW_TAG"
 
@@ -104,12 +112,8 @@ stages:
               echo "Tag $NEW_TAG créé ✅"
             displayName: 'Versioning — Calcul et tag Git'
 
-          # ── STEP 3 : Tag image Docker avec version (prod uniquement) ──
+          # ── Tag image Docker ──
           - bash: |
-              if [ "$(IS_PROD)" != "true" ]; then
-                echo "Staging — tag version ignoré"
-                exit 0
-              fi
               echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
               docker pull $(FULL_IMAGE):prod
               docker tag $(FULL_IMAGE):prod $(FULL_IMAGE):$(NEW_VERSION)
@@ -117,35 +121,30 @@ stages:
               echo "Image taguée $(NEW_VERSION) ✅"
             displayName: 'Tag image Docker avec version'
 
-          # ── STEP 4 : Déploiement SSH ──
+          # ── Déploiement ──
           - task: SSH@0
-            displayName: 'Deploy API sur OVH via Docker Compose'
+            displayName: 'Deploy API prod'
             inputs:
               sshEndpoint: 'OVH-SSH-Connection'
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                echo "$(GHCR_PAT)" | docker login ghcr.io -u NizardV --password-stdin
-                cd ~/cyna-infra
-                git pull origin main
+                echo "$GHCR_PAT_ENV" | docker login ghcr.io -u NizardV --password-stdin
+                cd ~/cyna-infra && git pull origin main
                 cd docker-compose/
-                echo "─── Pull & Relance de l'API ($(envName)) sur le port $(API_PORT) ───"
-                ENV_NAME=$(envName) \
-                API_PORT=$(API_PORT) \
-                ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml pull api
-                ENV_NAME=$(envName) \
-                API_PORT=$(API_PORT) \
-                ASPNETCORE_ENVIRONMENT=$(ASPNETCORE_ENV) \
-                  docker compose -p $(composeProject) -f docker-compose.$(envName).yml up -d --no-build --force-recreate
+                echo "─── Pull & Relance API prod sur le port 4000 ───"
+                docker compose -p cyna-prod -f docker-compose.prod.yml --env-file .env.prod pull api
+                docker compose -p cyna-prod -f docker-compose.prod.yml --env-file .env.prod up -d --no-build --force-recreate api
+            env:
+              GHCR_PAT_ENV: $(GHCR_PAT)
 
-          # ── STEP 5 : Health check ──
+          # ── Health check ──
           - task: SSH@0
-            displayName: 'Health check post-deploy'
+            displayName: 'Health check prod'
             inputs:
               sshEndpoint: 'OVH-SSH-Connection'
               runOptions: 'inline'
               failOnStdErr: false
               inline: |
-                sleep 5
-                curl -f http://localhost:$(API_PORT)/health || exit 1
+                sleep 10
+                curl -f http://localhost:4000/health || exit 1
