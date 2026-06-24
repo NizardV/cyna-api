@@ -43,7 +43,7 @@ public class PaymentTestController : ControllerBase
     [HttpPost("subscription")]
     public async Task<IActionResult> TestSubscription([FromBody] PaymentTestRequestDto? dto)
     {
-        if (!_env.IsDevelopment()) return NotFound();
+        if (!_env.IsDevelopment() && !_env.IsStaging()) return NotFound();
         dto ??= new PaymentTestRequestDto();
 
         var customer = await new CustomerService().CreateAsync(new CustomerCreateOptions
@@ -109,7 +109,7 @@ public class PaymentTestController : ControllerBase
     [HttpPost("one-time")]
     public async Task<IActionResult> TestOneTime([FromBody] PaymentTestRequestDto? dto)
     {
-        if (!_env.IsDevelopment()) return NotFound();
+        if (!_env.IsDevelopment() && !_env.IsStaging()) return NotFound();
         dto ??= new PaymentTestRequestDto();
 
         var customer = await new CustomerService().CreateAsync(new CustomerCreateOptions
