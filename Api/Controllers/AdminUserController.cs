@@ -122,12 +122,25 @@ public class AdminUserController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        // Convertir la string en UserRole
+        if (!Enum.TryParse<UserRole>(dto.Role, true, out var newRole))
+        {
+            // Si la conversion échoue, essayer de mapper depuis la description française
+            newRole = dto.Role switch
+            {
+                "Utilisateur" => UserRole.User,
+                "Administrateur" => UserRole.Admin,
+                "Super administrateur" => UserRole.SuperAdmin,
+                _ => throw new ArgumentException($"Invalid role: {dto.Role}")
+            };
+        }
+
         _logger.Info("PATCH /admin/users/{Id}/role — Role={Role}", id, dto.Role);
 
         try
         {
-            await _userService.SetUserRoleAsync(id, dto.Role);
-            return Ok(new { message = $"Rôle de l'utilisateur {id} changé en « {dto.Role.GetEnumDescription()} »." });
+            await _userService.SetUserRoleAsync(id, newRole);
+            return Ok(new { message = $"Rôle de l'utilisateur {id} changé en « {newRole.GetEnumDescription()} »." });
         }
         catch (KeyNotFoundException ex)
         {
