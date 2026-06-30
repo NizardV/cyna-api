@@ -29,11 +29,6 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=2028di1p5g3
-            -Dsonar.projectKey=2028DI1P5G3_Cyna-Api
-            -Dsonar.projectName=CYNA - Backend Web
 
       - name: dotnet restore
         run: dotnet restore CynaApi.sln
