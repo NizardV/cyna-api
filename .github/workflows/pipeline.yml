@@ -83,7 +83,6 @@ jobs:
           host: ${{ secrets.OVH_HOST }}
           username: ${{ secrets.OVH_USER }}
           key: ${{ secrets.OVH_SSH_KEY }}
-          envs: DB_PASSWORD,JWT_SECRET_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM,STRIPE_PUBLISHABLE_KEY
           script: |
             cat > ~/cyna-infra/docker-compose/.env.staging << EOF
             DB_PASSWORD=${{ secrets.DB_PASSWORD_STAGING }}
@@ -164,26 +163,31 @@ jobs:
         run: |
           git fetch --tags
           LAST_TAG=$(git tag --sort=-v:refname | grep -E '^api/v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
-          [ -z "$LAST_TAG" ] && LAST_TAG="api/v0.0.0"
 
-          VERSION=${LAST_TAG#api/v}
-          MAJOR=$(echo $VERSION | cut -d. -f1)
-          MINOR=$(echo $VERSION | cut -d. -f2)
-          PATCH=$(echo $VERSION | cut -d. -f3)
+          if [ -z "$LAST_TAG" ]; then
+            NEW_VERSION="v1.0.0"
+            NEW_TAG="api/${NEW_VERSION}"
+          else
+            VERSION=${LAST_TAG#api/v}
+            MAJOR=$(echo $VERSION | cut -d. -f1)
+            MINOR=$(echo $VERSION | cut -d. -f2)
+            PATCH=$(echo $VERSION | cut -d. -f3)
 
-          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
-          BUMP="patch"
-          echo "$COMMITS" | grep -qE '^feat!:|^fix!:|^refactor!:' && BUMP="major"
-          echo "$COMMITS" | grep -qE '^feat:' && [ "$BUMP" != "major" ] && BUMP="minor"
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+            BUMP="patch"
+            echo "$COMMITS" | grep -qE '^feat!:|^fix!:|^refactor!:' && BUMP="major"
+            echo "$COMMITS" | grep -qE '^feat:' && [ "$BUMP" != "major" ] && BUMP="minor"
 
-          case $BUMP in
-            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH+1)) ;;
-          esac
+            case $BUMP in
+              major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH+1)) ;;
+            esac
 
-          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-          NEW_TAG="api/${NEW_VERSION}"
+            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+            NEW_TAG="api/${NEW_VERSION}"
+          fi
+
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           git config user.name "github-actions[bot]"
