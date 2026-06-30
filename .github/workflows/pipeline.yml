@@ -82,6 +82,28 @@ jobs:
     if: github.ref == 'refs/heads/dev'
 
     steps:
+      - name: Generate .env.staging
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.OVH_HOST }}
+          username: ${{ secrets.OVH_USER }}
+          key: ${{ secrets.OVH_SSH_KEY }}
+          envs: DB_PASSWORD,JWT_SECRET_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM,STRIPE_PUBLISHABLE_KEY
+          script: |
+            cat > ~/cyna-infra/docker-compose/.env.staging << EOF
+            DB_PASSWORD=${{ secrets.DB_PASSWORD_STAGING }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_STAGING }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY_STAGING }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET_STAGING }}
+            API_PORT=4001
+            ASPNETCORE_ENVIRONMENT=Staging
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY_STAGING }}
+            RESEND_FROM=${{ secrets.RESEND_FROM_STAGING }}
+            STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_STAGING }}
+            VITE_APP_TITLE=Cyna [Staging]
+            VITE_APP_DESCRIPTION=Vente de solutions SaaS de cybersécurité
+            EOF
+
       - name: Deploy API staging
         uses: appleboy/ssh-action@v1
         with:
@@ -119,6 +141,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Generate .env.prod
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.OVH_HOST }}
+          username: ${{ secrets.OVH_USER }}
+          key: ${{ secrets.OVH_SSH_KEY }}
+          script: |
+            cat > ~/cyna-infra/docker-compose/.env.prod << EOF
+            DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY_PROD }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY_PROD }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET_PROD }}
+            API_PORT=4000
+            ASPNETCORE_ENVIRONMENT=Production
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY_PROD }}
+            RESEND_FROM=${{ secrets.RESEND_FROM_PROD }}
+            ADMIN_SEED_PASSWORD=${{ secrets.ADMIN_SEED_PASSWORD }}
+            STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY_PROD }}
+            VITE_APP_TITLE=Cyna
+            VITE_APP_DESCRIPTION=Vente de solutions SaaS de cybersécurité
+            EOF
 
       - name: Versioning — Calcul et tag Git
         id: version
