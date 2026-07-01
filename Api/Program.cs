@@ -32,10 +32,10 @@ try
                 policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
                       .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
             else if (builder.Environment.IsStaging())
-                policy.WithOrigins("https://staging.projet-cyna.fr")
+                policy.WithOrigins("https://staging.cyna.nizard.dev")
                       .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
             else
-                policy.WithOrigins("https://projet-cyna.fr", "https://www.projet-cyna.fr")
+                policy.WithOrigins("https://cyna.nizard.dev", "https://www.cyna.nizard.dev")
                       .AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         });
     });
