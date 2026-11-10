@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -43,7 +44,10 @@ public class CustomWebApplicationFactory<TProgram>
             services.AddDbContext<AppDbContext>((container, options) =>
             {
                 var connection = container.GetRequiredService<DbConnection>();
-                options.UseSqlite(connection);
+                // Les migrations sont générées pour PostgreSQL : rejouées sur SQLite, EF Core les voit
+                // comme « en retard » sur le modèle et refuse de démarrer. Sans objet pour une base de test.
+                options.UseSqlite(connection)
+                    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             });
 
             // ── Authentification : schéma de test piloté par l'en-tête X-Test-Role ──
