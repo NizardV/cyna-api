@@ -66,7 +66,9 @@ try
     builder.Services.AddDatabase(builder.Configuration, builder.Environment);
     builder.Services.AddJwtAuth(builder.Configuration);
     builder.Services.AddAppServices(builder.Configuration);
-    builder.Services.AddHealthChecks();
+    // /health vérifie aussi la base : sans elle, l'API répondait 200 alors qu'aucune requête ne passait
+    // (base injoignable du 2026-11-08 au 2026-11-10 sans alerte).
+    builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>("database");
 
     var app = builder.Build();
 
